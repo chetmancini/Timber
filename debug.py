@@ -12,8 +12,13 @@
 ##############################################################################
 
 ### Imports ##################################################################
+
+# Python Library Imports
 import sys
 import os
+
+# Local Imports
+import config
 
 ### Globals ##################################################################
 DEBUG_FLG = True
@@ -76,4 +81,23 @@ def countLinesOfCode():
     print total
 
 if __name__ == "__main__":
+    """
+    TEST ALL THE THINGS!!!1!
+    """
+    import launch
+    import nodes
+    import gossip
+    import logger
+    import exceptions
+    import vectorClock
+    import message
+    import group_membership
+    import simpledb
+    import timber_simple
+    import timber
+    import stats
+    import connections
+    import aggregation
+
+
     countLinesOfCode()

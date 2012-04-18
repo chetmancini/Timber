@@ -26,8 +26,9 @@ import Queue
 # External Library Imports
 from zope.interface import Interface, implements
 from twisted.internet import task, reactor
-from twisted.internet.protocol import 
-    Protocol, ServerFactory, ReconnectingClientFactory
+from twisted.internet.protocol import Protocol
+from twisted.internet.protocol import ServerFactory
+from twisted.internet.protocol import ReconnectingClientFactory
 
 # Local Imports
 import config

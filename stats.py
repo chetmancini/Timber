@@ -25,7 +25,8 @@ import math
 import psutil
 
 # Local Imports
-
+import config
+import connections
 
 ### Global Node Variables ####################################################
 p = psutil.Process(os.getpid())
@@ -41,7 +42,11 @@ def freespace():
     """
     if platform.system() == 'Windows':
         free_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder), None, None, ctypes.pointer(free_bytes))
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(
+            ctypes.c_wchar_p(folder), 
+            None, 
+            None, 
+            ctypes.pointer(free_bytes))
         return free_bytes.value
     else:
         st = os.statvfs(os.path.abspath("README.txt"))
@@ -176,6 +181,13 @@ def disk_load():
     disk_io_stat = new_stat
     return readCount,writeCount,readBytes,writeBytes,readTime,writeTime
 
+def disk_load_single_stat():
+    """
+    Give back a single number to represent disk load.
+    """
+    readCount,writeCount,readBytes,writeBytes,readTime,writeTime = disk_load()
+    return writeCount + (readCount / 2)
+
 # Network #
 def network_connections():
     """
@@ -205,12 +217,21 @@ def network_load():
     network_io_stat = new_stat #apply new values
     return receivedPackets,sentPackets,receivedBytes,receivedPackets
 
+def network_load_single_stat():
+    """
+    Give back a single number to represent network load.
+    """
+    receivedPackets,sentPackets,receivedBytes,sentBytes = network_load()
+    return receivedBytes + sentBytes
+
+
 def averagePacketSize():
     """
     Return the average packet size from this node in the system.
     """
     receivedPackets,sentPackets,receivedBytes,receivedPackets = network_load()
-    return math.ceil((receivedBytes + sentBytes) / (receivedPackets + sentPackets))
+    return math.ceil(
+        (receivedBytes + sentBytes) / (receivedPackets + sentPackets))
 
 
 # Application & Process #

@@ -305,7 +305,7 @@ class MeMessage(NetworkStatusMessage):
         """
         Insert the received node into this table.
         """
-        try
+        try:
             nodeData = node.buildNode(self._payload)
             if nodeData.getUid() not in connections.universe:
                 connections.universe[nodeData.getUid()] = nodes.ExternalNode(
@@ -457,8 +457,12 @@ class AggregateMessage(GossipNetworkStatusMessage):
         """
         Respond to an AggregateMessage
         """
-        aggstat = self.getPayload()
-        aggregation.STATISTICS[aggstat.getName()].reduce(aggstat)
+        try:
+            aggstat = self.getPayload()
+            aggregation.STATISTICS[aggstat.getName()].reduce(aggstat)
+            debug("Responded to AggregateMessage", success=True)
+        except:
+            debug("Did not respond to aggregation message.", error=True)
 
     @staticmethod
     def createAggregateMessage(agg):
@@ -508,6 +512,9 @@ class LogMessage(GenericMessage):
         """
         return 'L'
 
+    def respond(self):
+        pass
+
     @staticmethod
     def isLogMessage(msg):
         """
@@ -532,6 +539,9 @@ class InternalLogMessage(LogMessage):
         """
         return 'IL'
 
+    def respond(self):
+        pass
+
     @staticmethod
     def isInternalLogMessage(msg):
         """
@@ -555,6 +565,9 @@ class ExternalLogMessage(LogMessage):
         External log message code
         """
         return 'EL'
+
+    def respond(self):
+        pass
 
     @staticmethod
     def isExternalLogMessage(msg):

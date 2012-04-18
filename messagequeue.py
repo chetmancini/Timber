@@ -27,13 +27,11 @@ import txamqp.spec
 
 # Local Imports
 import config
+from debug import debug
 
-### GLOBALS ##################################################################
+### Constants ################################################################
 DURABLE = False
 DURABLE_MODE = 2 if DURABLE else 1
-
-RABBIT_MQ_HOST = config.QUEUE_HOST 
-RABBIT_MQ_PORT = config.QUEUE_PORT
 
 VHOST = "/"
 EXCHANGE_NAME = "timber_exchange"
@@ -44,18 +42,15 @@ CONSUMER_TAG = "timber_consumer_tag"
 NON_PERSISTENT = 1
 PERSISTENT = 2
 
-CREDENTIALS = {"LOGIN": config.QUEUE_USERNAME, 
-               "PASSWORD": config.QUEUE_PASSWORD}
-
 
 ### Common Functions #########################################################
 @inlineCallbacks
 def getConnection(client):
     conn = yield client.connectTCP(
-        RABBIT_MQ_HOST, RABBIT_MQ_PORT)
+        config.QUEUE_HOST, config.QUEUE_PORT)
     # start the connection negotiation process, sending security mechanisms
     # which the client can use for authentication
-    yield conn.start(credentials)
+    yield conn.start(config.QUEUE_CREDENTIALS)
     returnValue(conn)
 
 

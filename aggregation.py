@@ -276,8 +276,9 @@ class UpdateAggregator(NamedAggregator):
 ### Globals ##################################################################
 
 DISK_AVAILABLE = MinMaxAggregator('diskavailable', stats.disk_free)
-NETWORK_LOAD = MinMaxAggregator('networkload')
-CPU_LOAD = MinMaxAggregator('cpuload')
+NETWORK_LOAD = MinMaxAggregator('networkload', stats.network_load_single_stat)
+DISK_LOAD = MinMaxAggregator('diskload', stats.disk_load_single_stat)
+#CPU_LOAD = MinMaxAggregator('cpuload', stats.cpu_load)
 PMEM_AVAILABLE = MinMaxAggregator('pmemavailable', stats.physical_mem_free)
 NODE_COUNT = UpdateAggregator('nodecount', stats.timber_node_count)
 LOG_COUNT = UpdateAggregator('logcount', logger.logCount)
@@ -285,7 +286,8 @@ LOG_COUNT = UpdateAggregator('logcount', logger.logCount)
 STATISTICS = {
     'diskavailable': DISK_AVAILABLE, 
     'networkload': NETWORK_LOAD, 
-    'cpuload': CPU_LOAD, 
+    'diskload': DISK_LOAD,
+    #'cpuload': CPU_LOAD, 
     'pmemavailable': PMEM_AVAILABLE, 
     'nodecount': NODE_COUNT, 
     'logcount':LOG_COUNT
