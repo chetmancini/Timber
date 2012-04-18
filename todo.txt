@@ -1,0 +1,18 @@
+TODO
+
+## Main Applicaiton
+
+
+## Sister Applications
+
+* Load Balancer
+* Weight tester
+* Storage Layer
+
+Implementations.
+
+
+
+Aggregation
+
+Not sure how we refresh information from the server
