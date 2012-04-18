@@ -55,7 +55,8 @@ class HissConnection(object):
         """
         Initialize HissTCPConnection from client.
         """
-        client = twisted.internet.tcp.Client(host, port, bindAddress, connector)
+        client = twisted.internet.tcp.Client(
+            host, port, bindAddress, connector)
         return cls(parentNode, client)
 
     def loseWriteConnection():
@@ -110,7 +111,9 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         """
         Initialize HissTCPConnection from client.
         """
-        client = twisted.internet.tcp.Client(host, port, bindAddress, connector)
+        client = twisted.internet.tcp.Client(
+            host, port, bindAddress, connector)
+
         return cls(parentNode, client)
 
 
@@ -119,19 +122,22 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         Callback called when this connection is lost
         """
         super.connectionLost()
-        debug("Connection lost for reason: " + str(reason))
+        debug("Connection lost for reason: " + str(reason), info=True)
         _parentNode.destroyTCPConnection()
 
     def dispatchMessage(self, msg):
         """
         wrapper for super.write(). Add some sanity checking and debugging.
         """
-        super.write(msg.getSerialized())
+        try:
+            super.write(msg.getSerialized())
+        except:
+            debug("Failed to write message " + msg.getCode(), error=True)
 
 
 
 
-### Constants ################################################################
+### Variables ################################################################
 me = None
 """
 Node representing my transport.
@@ -139,7 +145,8 @@ Node representing my transport.
 
 universe = {}
 """
-Dictionary of nodes in the system. UID -> ExternalNode. Those contain the TCPConnections
+Dictionary of nodes in the system. UID -> ExternalNode. 
+Those contain the TCPConnections
 """
 
 neighbors = set([])
@@ -153,10 +160,12 @@ knownDead = set([])
 ### Functions ################################################################
 
 def init():
+    global me
     me = nodes.CurrentNode()
+    debug("Init called. Node is " + me.__str__())
 
 def getMe():
-    if me == None:
+    if not me:
         init()
     return me
 
@@ -176,6 +185,7 @@ def addNeighbor(uid):
     """
     Add a node to the neighbor set.
     """
+    global neighbors
     if uid in universe:
         neighbors.add(uid)
         universe[uid].openTCPConnection()
@@ -185,15 +195,17 @@ def removeNeighbor(uid):
     """
     Remove a node from the neighbor set
     """
+    global neighbors
     if uid in neighbors:
         neighbors.remove(uid)
 
 def getNeighbors():
     """
     Return the nodes to gossip with.
-    This algorithm might be expanded later. Right now we just have a constant group.
-    Theoretically it would try a few and optimize to gossip with the nearest nodes.
-    Definitely an area for further design and implementation.
+    This algorithm might be expanded later. Right now we just have a 
+    constant group. Theoretically it would try a few and optimize to gossip 
+    with the nearest nodes. Definitely an area for further design and 
+    implementation.
     """
     return neighbors
 
@@ -229,38 +241,43 @@ def deadNode(uid):
     """
     Remove a node from the neighbors.
     """
+    global neighbors
+    global universe
     try:
         neighbors.remove(uid)
         universe.remove(uid)
     finally:
         knownDead.add(uid)
+    debug("removing dead node uid:" + uid, info=True)
 
 def foundClient(transport):
     """
     When a TCP Connection is created.
     """
+    global universe
     ip = transport.getPeer().host
     for node in universe.values():
         if item.getIp() == ip:
             item.setTCPConnection(transport)
-            print "successfully set transport to",ip
+            debug("set transport to" + ip, success=True)
             return True
 
     #### TODO: Create node.
-    print "Node",ip,"does not exist yet. Creating it"
+    debug("Node " + ip + "does not exist yet. Creating it", info=True)
     return False
 
 def lostClient(transport):
     """
     When a TCP Connection is lost.
     """
+    global universe
     ip = transport.getPeer().host
     for node in universe.values():
         if item.getIp() == ip:
             item.destroyTCPConnection()
-            print "Lost connection with ", ip
+            debug("Lost connection with " + ip, info=True)
             return True
-    print "Could not find connection with ",ip,"to lose"
+    debug("Could not find connection with " + ip + " to lose", info=True)
     return False
 
 def createVectorClockMessage():

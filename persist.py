@@ -70,6 +70,7 @@ def insert(items):
      """
      Insert one or more items into the collection.
      """
+     global mongoCollection
      mongoCollection.insert(items)
 
 

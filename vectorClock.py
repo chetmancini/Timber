@@ -14,16 +14,78 @@
 
 ### Imports ##################################################################
 
+# External Library Imports
+import zope.interface
+
 # Local Imports
 import config
 import connections
 import message
+from debug import debug
+
+### Interfaces ###############################################################
+class IVectorClock(zope.interface.Interface):
+    """
+    Vector Clock Interface
+    """
+
+    def incrementClock():
+        """
+        Increment this clock
+        """
+
+    def handleEvent(message):
+        """
+        Handle internal system event
+        """
+
+    def createMessage():
+        """
+        Create a message from this clock
+        """
+
+    def mergeClock(otherclock):
+        """
+        Merge this clock with another
+        """
+
+    def receiveMessage(vectorMessage):
+        """
+        Receive a message and merge
+        """
+
+    def cameBefore(otherclock):
+        """
+        Whether this came before another clock
+        """
+
+    def cameAfter(otherclock):
+        """
+        Whether this came after another clock
+        """
+
+    def certainOrder(otherclock):
+        """
+        Whether we cannot be sure about the order.
+        """
+
+    def getClocks():
+        """
+        Get internal clock
+        """
+
+    def getKey():
+        """
+        Get the key this one uses for its clock
+        """
 
 ### Classes ##################################################################
-class VectorClock:
+class VectorClock(object):
     """
     Basic Vector Clock algorithm implementation for single-threaded web apps.
     """
+
+    zope.interface.implements(IVectorClock)
 
     def __init__(self, key=None, initialClocks=None, externKeys=None):
         """
@@ -76,6 +138,7 @@ class VectorClock:
             else:
                 self._clocks[key] = otherclock[key] 
                 #automatically adds new key
+        debug("Merged Vector Clocks", info=True)
 
 
     def receiveMessage(self, vectorMessage):
@@ -110,6 +173,9 @@ class VectorClock:
                 oneStrictlyLarger = True
         return oneStrictlyLarger
 
+    def certainOrder(self, otherclock):
+        return self.cameBefore(otherclock) or self.cameAfter(otherclock)
+
     def getClocks(self):
         """
         Get the dictionary of clocks. (vector clock)
@@ -122,7 +188,3 @@ class VectorClock:
         current system, but that might not be the case for merges.
         """
         return self._key
-
-    def sendMesage(self):
-        msg = message.VectorMessage(self, connections.getMe(), connections.neighbors)
-        msg.send()

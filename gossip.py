@@ -26,7 +26,8 @@ import Queue
 # External Library Imports
 from zope.interface import Interface, implements
 from twisted.internet import task, reactor
-from twisted.internet.protocol import Protocol, ServerFactory, ReconnectingClientFactory
+from twisted.internet.protocol import 
+    Protocol, ServerFactory, ReconnectingClientFactory
 
 # Local Imports
 import config
@@ -135,7 +136,7 @@ class GossipServerFactory(ServerFactory):
         #self.clients = []
         self.lc = task.LoopingCall(self.gossip)
         self.lc.start(config.GOSSIP_WAIT_SECONDS, False)
-        debug("Gossip Server Factory created!")
+        debug("Gossip Server Factory created!", success=True)
 
     def gossip(self):
         """
@@ -146,20 +147,20 @@ class GossipServerFactory(ServerFactory):
 
         # Get my neighbors
         recipients = connections.getNeighbors()
-        for uid in connections.recipients:
+        for uid in recipients:
             debug("\t" + uid + "\t" + externalnode.getIp())
 
         # Put all messages in a list.
         gossipMessages = []
 
         # Get a vector clock message
-        vcMessage = VectorMessage.createVectorClockMessage()
+        vcMessage = message.VectorMessage.createVectorClockMessage()
         vcMessage.setRecipients(recipients)
         gossipMessages.append(vcMessage)
 
         # Put in each aggreggation
         for agg in aggregation.STATISTICS:
-            aggMessage = AggregateMessage.createAggregateMessage(agg)
+            aggMessage = message.AggregateMessage.createAggregateMessage(agg)
             aggMessage.setRecipients(recipients)
             gossipMessages.append(aggMessage)
 
@@ -237,8 +238,9 @@ def gossipThis(msg):
     """
     Receive a gossiped Message from another node.
     """
+    global gossipqueue
     debug("Received Gossip message: " + msg.__class__.__name__ + 
-        " from " + msg.getSender() + " (" + msg.getCode() + ")")
+        " from " + msg.getSender() + " (" + msg.getCode() + ")", success=True)
     gossipqueue.put_nowait(msg)
 
 def gossipPrepare():

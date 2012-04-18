@@ -13,7 +13,9 @@
 ##############################################################################
 
 ### Imports ##################################################################
+# Local Imports
 import messagequeue
+from debug import debug
 
 ### Constants ################################################################
 USE_QUEUE = False
@@ -28,8 +30,14 @@ def logMessage(messageObject):
     """
     Log a messsage
     """
+    global logcount
+    global channel
+    global connection
+
     if USE_QUEUE:
         if (messageObject.getCode() != "EL") or (messageObject.getCode() != "IL"):
+
+            debug("Invalid message" + messageObject.getCode(), error=True)
             raise "Invalid message"
 
         if connection == None:
@@ -40,9 +48,19 @@ def logMessage(messageObject):
         messagequeue.producter_pushText(channel, messageObject)
     else:
         if (messageObject.getCode() != "EL") or (messageObject.getCode() != "IL"):
+
+            debug("Invalid message" + messageObject.getCode(), error=True)
             raise "Invalid message"
 
-        persist.log(messageObject.getLevel(), messageObject.getPayload(), True)
+    try:
+        persist.log(
+            messageObject.getLevel(), 
+            messageObject.getPayload(), 
+            True)
+
+        debug("Message logged", success=True)
+    except:
+        debug("Message not logged!", error=True)
 
     logcount += 1
 

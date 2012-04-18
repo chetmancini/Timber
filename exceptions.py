@@ -12,13 +12,19 @@
 ##############################################################################
 
 ### Imports ##################################################################
+import zope.interface.Interface
 
+### Interface ################################################################
+class IError(zope.interface.Interface):
+    pass
 
 ### Classes ##################################################################
 class Error(Exception):
     """
     Base class for exceptions in this module.
     """
+    implements(IError)
+
     pass
 
 class InvalidPeerIDError(Error):

@@ -24,6 +24,7 @@ import timber
 import timber_simple
 import gossip
 import config
+import connections
 from debug import debug
 
 ### Classes ##################################################################
@@ -49,21 +50,25 @@ def parse_args():
     parser.add_argument('--port', 
         default=config.DEFAULT_RECEIVE_PORT, 
         type=int,
-        help='The port for the gossip system to listen on. (Integer, default: %(default)s)')
+        help='The port for the gossip system to listen on. \
+            (Integer, default: %(default)s)')
 
     parser.add_argument('--logport', 
         default=config.DEFAULT_LOG_PORT, 
         type=int,
-        help='The port to receive log messages on. (Integer, default: %(default)s)')
+        help='The port to receive log messages on. \
+            (Integer, default: %(default)s)')
 
     parser.add_argument('--interval', 
         default=config.DEFAULT_GOSSIP_WAIT_SECONDS, 
         type=int,
-        help='The interval to send gossip messages. (Integer, default: %(default)s)')
+        help='The interval to send gossip messages. \
+            (Integer, default: %(default)s)')
 
     parser.add_argument('--iface', 
         default='localhost',
-        help='The interface to communicate on. (String, default: %(default)s)')
+        help='The interface to communicate on. \
+            (String, default: %(default)s)')
 
     parser.add_argument('--version', 
         action='version', 
@@ -98,6 +103,8 @@ def main():
     """
     args = parse_args()
     applyArgs(args)
+
+    connections.init()
 
     if not args.timberoff:
         timber_simple.timberSimpleRun()

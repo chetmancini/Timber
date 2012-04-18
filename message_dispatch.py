@@ -13,14 +13,18 @@
 ##############################################################################
 
 ### Imports ##################################################################
-# Library Imports
+# Python Library Imports
 import time
-import zope.interface
+
+# External Library Imports
+from zope.interface import Interface, implements
+
 # Local Imports
 import config
+from debug import debug
 
 ### Interfaces ###############################################################
-class IMessageDispatcher(zope.interface.Interface):
+class IMessageDispatcher(Interface):
     """
     Message dispatcher interface
     """
@@ -35,7 +39,7 @@ class MessageDispatcher:
     """
     Concrete message dispatcher
     """
-    zope.interface.implements(IMessageDispatcher)
+    implements(IMessageDispatcher)
 
     def __init__(self):
         """
@@ -45,7 +49,7 @@ class MessageDispatcher:
 
     def _hasConnectionTo(self, remote):
         """
-
+        Internal method if this has a connection to a remote server.
         """
         return False
 

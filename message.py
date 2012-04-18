@@ -23,6 +23,8 @@ import zope.interface
 # Local Imports
 import config
 import vectorClock
+import connections
+from debug import debug
 
 ### Message Interface ########################################################
 class IMessage(zope.interface.Interface):
@@ -141,10 +143,13 @@ class GenericMessage(object):
 
     def send(self):
         """
-        Send the message. Assume we don't have multicast, so just do point to point for now.
+        Send the message. Assume we don't have multicast, 
+        so just do point to point for now.
         """
         if not self._recipients or len(self.getRecipients()) == 0:
-            raise "No recipients specified. Gossip message type" + self.getCode() + "instead."
+            debug("No recipients specified.", error=True)
+            raise "No recipients specified. Gossip message type" \
+                + self.getCode() + "instead."
 
         for recipient in self.getRecipients():
 
@@ -161,7 +166,7 @@ class GenericMessage(object):
                     # Ok, stop messing around and send the message!
                     tcpConn = node.getTCPConnection().dispatchMessage(self)
             else:
-                raise "recipient " + uid +" not found."
+                raise "recipient " + uid + " not found."
 
     def getCode(self):
         """
@@ -187,16 +192,22 @@ class VectorMessage(GenericMessage):
     (just a dictionary, not the wrapper class)
     """
 
-    def __init__(self, vectorClock, sender=None, recipients=None):
+    def __init__(self, vClock, sender=None, recipients=None):
         """
         Constructor
         """
-        if type(vectorClock) is vectorClock.VectorClock:
-            super(VectorMessage, self).__init__(vectorClock.getClocks(), sender, recipients)
-            self._clockKey = vectorClock.getKey()
+        if type(vClock) is vectorClock.VectorClock:
+            super(VectorMessage, self).__init__(
+                vClock.getClocks(), sender, recipients)
+
+            self._clockKey = vClock.getKey()
+
         else:
-            super(VectorMessage, self).__init__(vectorClock, sender, recipients)
+            super(VectorMessage, self).__init__(
+                vClock, sender, recipients)
+
             self._clockKey = sender.getUid()
+
         self._code = "V"
         
     def getVectorClock(self):
@@ -212,8 +223,12 @@ class VectorMessage(GenericMessage):
         connections.getMe().getVectorClock().receiveMessage(self)
 
     @staticmethod
-    def createVectorMessage():
-        return connections.getMe().getVectorClock().createMessage()
+    def createVectorClockMessage():
+        me = connections.getMe()
+        if me:
+            return me.getVectorClock().createMessage()
+        else:
+            debug("me is null?")
 
     @staticmethod
     def isVectorMessage(msg):
@@ -263,7 +278,10 @@ class IsAliveMessage(NetworkStatusMessage):
         """
         Response to IsAliveMessage
         """
-        responseMsg = MeMessage(connections.getMe().getUid(), [self._sender.getUid()])
+        debug('respnding to an isalive message with a memessage')
+        responseMsg = MeMessage(
+            connections.getMe().getUid(), 
+            [self._sender.getUid()])
         responseMsg.send()
 
     @staticmethod
@@ -287,11 +305,17 @@ class MeMessage(NetworkStatusMessage):
         """
         Insert the received node into this table.
         """
-        nodeData = node.buildNode(self._payload)
-        if nodeData.getUid() not in connections.universe:
-            connections.universe[nodeData.getUid()] = nodes.ExternalNode(
-                nodeData.getIp(), config.DEFAULT_SEND_PORT, nodeData.getUid())
-        connections.universe[nodeData.getUid()].knownAlive = True
+        try
+            nodeData = node.buildNode(self._payload)
+            if nodeData.getUid() not in connections.universe:
+                connections.universe[nodeData.getUid()] = nodes.ExternalNode(
+                    nodeData.getIp(), 
+                    config.DEFAULT_SEND_PORT, 
+                    nodeData.getUid())
+            connections.universe[nodeData.getUid()].knownAlive = True
+            debug('reponded to a MeMessage')
+        except:
+            debug('failed to respond to MeMessage')
 
     @staticmethod
     def isMeMessage(msg):
@@ -310,7 +334,9 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
         """
         Constructor
         """
-        super(GossipNetworkStatusMessage, self).__init__(updates, sender, recipients)
+        super(GossipNetworkStatusMessage, self).__init__(
+            updates, sender, recipients)
+
         self._gossipttl = config.GOSSIPTTL
         self._code = 'G'
 
@@ -325,12 +351,15 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
         Defines how to respond when one of these messages is recieved
         No defined behavior in parent class yet.
         """
-        self.decrementTtl()
-        if self.getTtl() > 0:
-            self._sender = connections.getMe().getBaseData()
-            self._recipients = []
-            # retain the same payload.
-            gossip.gossipThis(self)
+        try:
+            self.decrementTtl()
+            if self.getTtl() > 0:
+                self._sender = connections.getMe().getBaseData()
+                self._recipients = []
+                # retain the same payload.
+                gossip.gossipThis(self)
+        except:
+            debug("failed to respond to gossip network status message")
 
     @staticmethod
     def isGossipNetworkStatusMessage(msg):
@@ -358,12 +387,16 @@ class DeadNodeMessage(GossipNetworkStatusMessage):
         """
         Respond to a dead node.
         """
-        uid = self.getPayload()
-        if uid in connections.universe:
-            connections.removeNode(uid)
-            super.respond()
-        else:
-            pass #don't gossip if we've already gossipped this.
+        try:
+            uid = self.getPayload()
+            if uid in connections.universe:
+                connections.removeNode(uid)
+                super.respond()
+            else:
+                pass #don't gossip if we've already gossipped this.
+            debug("Responded to dead node message.", success=True)
+        except:
+            debug("failed to respond to dead node message", error=True)
 
     @staticmethod
     def isDeadNodeMessage(msg):
@@ -389,12 +422,16 @@ class NewNodeMessage(GossipNetworkStatusMessage):
         """
         How to respond to a new node message.
         """
-        (uid, ip) = self.getPayload()
-        if uid not in connections.universe: 
-            connections.createNode(uid, ip, connections.DEFAULT_SEND_PORT)
-            super.respond()
-        else:
-            pass # don't need to gossip if we've already gossipped this.
+        try:
+            (uid, ip) = self.getPayload()
+            if uid not in connections.universe: 
+                connections.createNode(uid, ip, connections.DEFAULT_SEND_PORT)
+                super.respond()
+            else:
+                pass # don't need to gossip if we've already gossipped this.
+            debug("Successfully responded to new node message", success=True)
+        except:
+            debug("Failed to respond to new node message", error=True)
 
     @staticmethod
     def isNewNodeMessage(msg):
@@ -425,12 +462,16 @@ class AggregateMessage(GossipNetworkStatusMessage):
 
     @staticmethod
     def createAggregateMessage(agg):
+        """
+        Build an aggregate message for the aggregation in the param.
+        """
         return AggregateMessage(agg, connections.getMe().getUid())
 
     @staticmethod
     def isAggregateMessage(msg):
         """
-        Static method to tell whether the provided message is an AggregateMessage
+        Static method to tell whether the provided 
+        message is an AggregateMessage
         """
         return msg.getCode() == "AG"
 

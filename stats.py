@@ -163,6 +163,7 @@ def disk_load():
     Return a 6-tuple of statistics relating to the disk usage between calls
     of this function.
     """
+    global disk_io_stat
     new_stat = psutil.disk_io_counters()
 
     readCount = new_stat.read_count - disk_io_stat.read_count
@@ -193,6 +194,7 @@ def network_load():
     Return a 4-tuple describing data about network load and usage measured as
     between calls of this function.
     """
+    global network_io_stat
     new_stat = psutil.network_io_counters()
 
     receivedPackets = new_stat.packets_recv - network_io_stat.packets_recv
@@ -224,6 +226,7 @@ def timber_load():
     Calculate Timber's IO load since the last call
     """
     #io(read_count=454556, write_count=3456, read_bytes=110592, write_bytes=0)
+    global timber_io_stat
     new_stat = p.get_io_counters()
     readCount = new_stat.read_count - timber_io_stat.read_count
     writeCount = new_stat.write_count - timber_io_stat.write_count

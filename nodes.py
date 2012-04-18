@@ -27,6 +27,7 @@ import twisted.internet.tcp
 import config
 import connections
 import vectorClock
+from debug import debug
 
 ### Classes ##################################################################
 class INode(zope.interface.Interface):
@@ -56,6 +57,11 @@ class INode(zope.interface.Interface):
         Get this node in a serialized form
         """
 
+    def __str__():
+        """
+        Get this as a string
+        """
+
 
 class BaseNode(object):
     """
@@ -69,7 +75,11 @@ class BaseNode(object):
         Constructor
         """
         self._ip = ip
-        self._port = port
+        if port:
+            self._port = port
+        else:
+            self._port = config.RECEIVE_PORT
+
         if uid:
             self._uid = uid
         else:
@@ -100,9 +110,16 @@ class BaseNode(object):
         return self._uid.hex
 
     def getSerialized(self):
+        """
+        Get a serialized version of this node. Uses Pickle (cPickle)
+        """
         return cPickle.dumps(self)
 
-
+    def __str__(self):
+        """
+        Get a string representation of this node. Used mostly for debug.
+        """
+        return self.getIp() + ":" + str(self.getPort())
 
 class ExternalNode(BaseNode):
     """
@@ -121,6 +138,7 @@ class ExternalNode(BaseNode):
         """
         Open a new TCP connection from the local node to this node.
         """
+        debug("Opening a new connection", info=True)
         #tcpConnection = connections.HissTCPClientConnection(self, )
         pass
 
@@ -128,7 +146,9 @@ class ExternalNode(BaseNode):
         """
         Assign a TCP connection to this node.
         """
-        self._tcpConnection = connections.HissTCPClientConnection(self, tcpConnection)
+        debug("Setting Connection", info=True)
+        self._tcpConnection = connections.HissTCPClientConnection(
+            self, tcpConnection)
 
     def getTCPConnection(self):
         """
@@ -148,6 +168,7 @@ class ExternalNode(BaseNode):
         """
         Destroy the TCP connection 
         """
+        debug("Destroying connection", info=True)
         if self.hasTCPConnection():
             self.getTCPConnection().loseConnection()
         self._tcpConnection = None
