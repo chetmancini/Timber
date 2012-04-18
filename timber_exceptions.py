@@ -36,6 +36,9 @@ class GeneralError(Error):
     General errors
     """
     def __init__(self, value):
+        """
+        Constructor
+        """
         super(GeneralError, self).__init__(value)
 
 class ConnectionError(Error):

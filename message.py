@@ -134,7 +134,10 @@ class GenericMessage(object):
         """
         get a string of the payload.
         """
-        return cPickle.dumps(self)
+        try:
+            return cPickle.dumps(self)
+        except:
+            debug("Failed to pickle message", error=True)
 
     def getTime(self):
         """
@@ -165,7 +168,11 @@ class GenericMessage(object):
                         "No connection to " + node.getUid())
                 else:
                     # Ok, stop messing around and send the message!
-                    tcpConn = node.getTCPConnection().dispatchMessage(self)
+                    try:
+                        tcpConn = node.getTCPConnection().dispatchMessage(self)
+                        debug("Message.py: Message sent.", success=True)
+                    except:
+                        debug("Failed to send message.", error=True)
             else:
                 raise GeneralError(
                     "recipient " + uid + " not found.")
@@ -282,11 +289,15 @@ class IsAliveMessage(NetworkStatusMessage):
         """
         Response to IsAliveMessage
         """
-        debug('respnding to an isalive message with a memessage')
-        responseMsg = MeMessage(
-            connections.getMe().getUid(), 
-            [self._sender.getUid()])
-        responseMsg.send()
+        debug('respnding to an isalive message with a memessage', info=True)
+        try:
+            responseMsg = MeMessage(
+                connections.getMe().getUid(), 
+                [self._sender.getUid()])
+            responseMsg.send()
+            debug('Sent MeMessage', success=True)
+        except:
+            debug("Error sending MeMessage", error=True)
 
     @staticmethod
     def isIsAliveMessage(msg):
@@ -317,9 +328,9 @@ class MeMessage(NetworkStatusMessage):
                     config.DEFAULT_SEND_PORT, 
                     nodeData.getUid())
             connections.universe[nodeData.getUid()].knownAlive = True
-            debug('reponded to a MeMessage')
+            debug('reponded to a MeMessage', success=True)
         except:
-            debug('failed to respond to MeMessage')
+            debug('failed to respond to MeMessage', error=True)
 
     @staticmethod
     def isMeMessage(msg):
@@ -362,8 +373,9 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
                 self._recipients = []
                 # retain the same payload.
                 gossip.gossipThis(self)
+            debug("Responded to gossip status message", success=True)
         except:
-            debug("failed to respond to gossip network status message")
+            debug("failed to respond to gossip status message", error=True)
 
     @staticmethod
     def isGossipNetworkStatusMessage(msg):
@@ -586,4 +598,7 @@ def buildMessage(serializedMessage):
     """
     build a message from a serialized code.
     """
-    return cPickle.loads(serializedMessage)
+    try:
+        return cPickle.loads(serializedMessage)
+    except:
+        debug("Could not de-pickle serialized message", error=True)

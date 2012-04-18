@@ -9,6 +9,8 @@
 #                                                                            #
 #----------------------------------------------------------------------------#
 # debug.py                                                                   #
+# Module for debugging. Can be called directly, which compiles everything    #
+# and then gives a total line count. Also handles internal printing.         #
 ##############################################################################
 
 ### Imports ##################################################################
@@ -48,17 +50,19 @@ def logMessage(msg):
     """
     printMessage(msg)
 
-def debug(msg, error=False, success=False, info=False):
+def debug(msg, error=False, success=False, info=False, strange=False):
     """
     Main debug function.
     """
     if DEBUG_FLG:
         if error:
-            printError("ERROR:\t" + msg)
+            printError("! ERROR:\t" + msg)
         elif success:
-            printMessage("SUCCESS:\t" + msg)
+            printMessage("* SUCCESS:\t" + msg)
         elif info:
-            printMessage("INFO:\t" + msg)
+            printMessage("- INFO:\t\t" + msg)
+        elif strange:
+            printMessage("? STRANGE\t" + msg)
         else:
             printMessage(msg)
     else:

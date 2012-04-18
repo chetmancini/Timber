@@ -132,7 +132,8 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         try:
             super.write(msg.getSerialized())
         except:
-            debug("Failed to write message " + msg.getCode(), error=True)
+            debug("Connection failed to write msg: " + msg.getCode(), 
+                error=True)
 
 
 
@@ -161,6 +162,7 @@ knownDead = set([])
 
 def init():
     global me
+    
     me = nodes.CurrentNode()
     debug("Init called. Node is " + me.__str__())
 
@@ -255,6 +257,7 @@ def foundClient(transport):
     When a TCP Connection is created.
     """
     global universe
+
     ip = transport.getPeer().host
     for node in universe.values():
         if item.getIp() == ip:
@@ -271,6 +274,7 @@ def lostClient(transport):
     When a TCP Connection is lost.
     """
     global universe
+
     ip = transport.getPeer().host
     for node in universe.values():
         if item.getIp() == ip:

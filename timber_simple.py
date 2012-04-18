@@ -47,8 +47,9 @@ from twisted.python import components, log
 
 # Local Imports
 import config
-from debug import debug
 import connections
+from timber_exceptions import GeneralError, ConnectionError
+from debug import debug
 
 ### Methods ##################################################################
 
@@ -188,6 +189,7 @@ def timberSimpleRun():
 
     timber_factory = server.Site(root)
 
+    debug("Launching Timber listener.", info=True)
     reactor.listenTCP(config.LOG_PORT, timber_factory)
 
 

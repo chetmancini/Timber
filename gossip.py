@@ -102,18 +102,18 @@ class GossipClientProtocol(Protocol):
     implements(IGossipClientProtocol)
 
     def connectionMade(self):
-        debug("Huh? Client protocol connection made??")
+        debug("Client protocol connection made", info=True)
         pass
 
     def connectionLost(self):
-        debug("huh? client protocol connection lost??")
+        debug("Client protocol connection lost", error=True)
         pass
 
     def dataReceived(self, data):
         """
         Data received? this seems a little odd.
         """
-        debug("huh? Client protocol data received??")
+        debug("Client protocol data received?", strange=True)
         msg = message.buildMessage(data)
         msg.respond()
 
@@ -146,12 +146,17 @@ class GossipServerFactory(ServerFactory):
         Gossip procedure. This is basic. Hope to improve later.
         """
         connections.connectToNeighbors()
-        debug("I am now gossiping with:")
 
         # Get my neighbors
         recipients = connections.getNeighbors()
-        for uid in recipients:
-            debug("\t" + uid + "\t" + externalnode.getIp())
+
+        if len(recipients) > 0:
+            debug("I am now gossiping with:")
+            for uid in recipients:
+                debug("\t" + uid + "\t" + externalnode.getIp())
+        else:
+            debug("No neighbors to gossip with this interval.", error=True)
+            return
 
         # Put all messages in a list.
         gossipMessages = []
@@ -241,6 +246,7 @@ class GossipClientFactory(ReconnectingClientFactory):
 
 ### Functions ################################################################
 def gossipRun():
+    debug("Launching Hiss Listener", info=True)
     gossipServerFactory = GossipServerFactory()
     reactor.listenTCP(config.RECEIVE_PORT, gossipServerFactory)
 
