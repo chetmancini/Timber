@@ -34,6 +34,8 @@ from twisted.internet.protocol import ReconnectingClientFactory
 import config
 import connections
 import message
+import aggregation
+from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
 ### Globals ##################################################################
@@ -176,7 +178,13 @@ class GossipServerFactory(ServerFactory):
 
         # Send out the messages
         for msg in gossipMessages:
-            msg.send()
+            try:
+                msg.send()
+                debug("message sent", success=True)
+            except ConnectionError as ce:
+                debug(ce.__str__(), error=True)
+            except GeneralError as ge:
+                debug(ge.__str__(), error=True)
 
 
     def clientConnectionMade(self, client):
@@ -191,7 +199,8 @@ class GossipServerFactory(ServerFactory):
         """
         When a node is lost.
         """
-        debug("Lost client " + str(client.transport.getPeer()) + " for reason " + str(reason))
+        debug("Lost client " + str(client.transport.getPeer()) + \
+            " for reason " + str(reason))
         connections.lostClient(client.transport)
 
 

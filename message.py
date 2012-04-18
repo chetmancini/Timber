@@ -24,6 +24,7 @@ import zope.interface
 import config
 import vectorClock
 import connections
+from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
 ### Message Interface ########################################################
@@ -148,8 +149,7 @@ class GenericMessage(object):
         """
         if not self._recipients or len(self.getRecipients()) == 0:
             debug("No recipients specified.", error=True)
-            raise "No recipients specified. Gossip message type" \
-                + self.getCode() + "instead."
+            raise GeneralError("No recipients specified.")
 
         for recipient in self.getRecipients():
 
@@ -161,12 +161,14 @@ class GenericMessage(object):
             if uid in connections.universe:
                 node = connections.universe[uid]
                 if not node.hasTCPConnection():
-                    raise "No connection to " + node.getUid()
+                    raise ConnectionError(
+                        "No connection to " + node.getUid())
                 else:
                     # Ok, stop messing around and send the message!
                     tcpConn = node.getTCPConnection().dispatchMessage(self)
             else:
-                raise "recipient " + uid + " not found."
+                raise GeneralError(
+                    "recipient " + uid + " not found.")
 
     def getCode(self):
         """
@@ -205,8 +207,10 @@ class VectorMessage(GenericMessage):
         else:
             super(VectorMessage, self).__init__(
                 vClock, sender, recipients)
-
-            self._clockKey = sender.getUid()
+            if sender:
+                self._clockKey = sender.getUid()
+            else:
+                self._clockKey = connections.getMe().getUid()
 
         self._code = "V"
         

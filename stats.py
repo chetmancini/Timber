@@ -27,6 +27,7 @@ import psutil
 # Local Imports
 import config
 import connections
+from debug import debug
 
 ### Global Node Variables ####################################################
 p = psutil.Process(os.getpid())
@@ -61,7 +62,7 @@ def init_stats():
     pass
 
 # Physical RAM #
-def physical_mem_total():
+def physical_mem_size():
     """
     Return the amount of total physical memory, in bytes.
     """
@@ -105,11 +106,30 @@ def virtual_mem_used():
     """
     return psutil.virtmem_usage().used
 
-def virtual_mem_total():
+def virtual_mem_size():
     """
     Return the total amount of virtual memory available on the system.
     """
     return psutil.virtmem_usage().total
+
+# Total RAM #
+def total_mem_free():
+    """
+    Return the total memory available (physical and virtual)
+    """
+    return virtual_mem_free() + physical_mem_free()
+
+def total_mem_used():
+    """
+    Return the total memory used (physical and virtual)
+    """
+    return virtual_mem_used() + physical_mem_used()
+
+def total_mem_size():
+    """
+    Return all the memory in the system
+    """
+    return virtual_mem_size() + physical_mem_size()
 
 # CPU #
 def cpu_count():
@@ -169,17 +189,20 @@ def disk_load():
     of this function.
     """
     global disk_io_stat
-    new_stat = psutil.disk_io_counters()
+    try:
+        new_stat = psutil.disk_io_counters()
 
-    readCount = new_stat.read_count - disk_io_stat.read_count
-    writeCount = new_stat.write_count - disk_io_stat.write_count
-    readBytes = new_stat.read_bytes - disk_io_stat.read_bytes
-    writeBytes = new_stat.write_bytes - disk_io_stat.write_bytes
-    readTime = new_stat.read_time - disk_io_stat.read_time
-    writeTime = new_stat.write_time - disk_io_stat.write_time
+        readCount = new_stat.read_count - disk_io_stat.read_count
+        writeCount = new_stat.write_count - disk_io_stat.write_count
+        readBytes = new_stat.read_bytes - disk_io_stat.read_bytes
+        writeBytes = new_stat.write_bytes - disk_io_stat.write_bytes
+        readTime = new_stat.read_time - disk_io_stat.read_time
+        writeTime = new_stat.write_time - disk_io_stat.write_time
 
-    disk_io_stat = new_stat
-    return readCount,writeCount,readBytes,writeBytes,readTime,writeTime
+        disk_io_stat = new_stat
+        return readCount,writeCount,readBytes,writeBytes,readTime,writeTime
+    except:
+        debug("Disk load data pull failed", error=True)
 
 def disk_load_single_stat():
     """
@@ -207,15 +230,18 @@ def network_load():
     between calls of this function.
     """
     global network_io_stat
-    new_stat = psutil.network_io_counters()
+    try:
+        new_stat = psutil.network_io_counters()
 
-    receivedPackets = new_stat.packets_recv - network_io_stat.packets_recv
-    sentPackets = new_stat.packets_sent - network_io_stat.packets_sent
-    receivedBytes = new_stat.bytes_recv - network_io_stat.bytes_recv
-    sentBytes = new_stat.bytes_sent - network_io_stat.bytes_sent
+        receivedPackets = new_stat.packets_recv - network_io_stat.packets_recv
+        sentPackets = new_stat.packets_sent - network_io_stat.packets_sent
+        receivedBytes = new_stat.bytes_recv - network_io_stat.bytes_recv
+        sentBytes = new_stat.bytes_sent - network_io_stat.bytes_sent
 
-    network_io_stat = new_stat #apply new values
-    return receivedPackets,sentPackets,receivedBytes,receivedPackets
+        network_io_stat = new_stat #apply new values
+        return receivedPackets,sentPackets,receivedBytes,receivedPackets
+    except:
+        debug("Network load data pull failed", error=True)
 
 def network_load_single_stat():
     """
@@ -248,15 +274,18 @@ def timber_load():
     """
     #io(read_count=454556, write_count=3456, read_bytes=110592, write_bytes=0)
     global timber_io_stat
-    new_stat = p.get_io_counters()
-    readCount = new_stat.read_count - timber_io_stat.read_count
-    writeCount = new_stat.write_count - timber_io_stat.write_count
-    readBytes = new_stat.read_bytes - timber_io_stat.read_bytes
-    writeBytes = new_stat.write_bytes - timber_io_stat.write_bytes
+    try:
+        new_stat = p.get_io_counters()
+        readCount = new_stat.read_count - timber_io_stat.read_count
+        writeCount = new_stat.write_count - timber_io_stat.write_count
+        readBytes = new_stat.read_bytes - timber_io_stat.read_bytes
+        writeBytes = new_stat.write_bytes - timber_io_stat.write_bytes
 
-    timber_io_stat = new_stat
+        timber_io_stat = new_stat
 
-    return readCount,writeCount,readBytes,writeBytes
+        return readCount,writeCount,readBytes,writeBytes
+    except:
+        debug("Timber load data pulled failed", error=True)
 
 def timber_node_count():
     """

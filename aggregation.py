@@ -19,15 +19,15 @@ import copy
 
 # External library imports
 import psutil
-from zope.interface import Interface, implements
+import zope.interface
 
 # Local imports
 import connections
 import logger
 import stats
 
-### Classes ##################################################################
-class IAggregator(Interface):
+### Interfaces ###############################################################
+class IAggregator(zope.interface.Interface):
     """
     IAggregation
     """
@@ -37,7 +37,17 @@ class IAggregator(Interface):
         Reduce from another object value.
         """
 
-class INamedAggregator(Interface):
+    def getValue():
+        """
+        Get the value of this aggregator
+        """
+
+    def getLocalValue():
+        """
+        Get the local value of the stat at this node.
+        """
+
+class INamedAggregator(zope.interface.Interface):
     """
     Interface for aggregators with name.
     """
@@ -52,13 +62,23 @@ class INamedAggregator(Interface):
         Reduce from another object value.
         """
 
+    def getValue():
+        """
+        get the value of this aggregator
+        """
 
+    def getLocalValue():
+        """
+        Get the local value of this stat at this node.
+        """
+
+### Classes ##################################################################
 class Aggregator(object):
     """
     ValueAggegation. Do not instanciate
     """
 
-    implements(IAggregator)
+    zope.interface.implements(IAggregator)
 
     def __init__(self, statistic=None):
         """
@@ -97,12 +117,19 @@ class Aggregator(object):
         tojoin = Aggregator(self.getName(), self._statistic_function)
         self.reduce(tojoin)
 
+    def getLocalValue(self):
+        """
+        Get the local value of at this node of the given
+        statistic.
+        """
+        return self._statistic_function()
+
 
 class NamedAggregator(Aggregator):
     """
     An aggregator with a name
     """
-    implements(INamedAggregator)
+    zope.interface.implements(INamedAggregator)
 
     def __init__(self, name, statistic=None):
         """
@@ -135,8 +162,8 @@ class MinAggregator(NamedAggregator):
         """
         if self.getName() == other.getName():
             if other.getValue() < self.getValue():
-                self.value = other.getValue()
-                self.key = other.getKey()
+                self._value = other.getValue()
+                self._key = other.getKey()
             return self.getValue()
         else:
             error = "Cannot reduce different aggregators: (" + self.getName()
@@ -176,7 +203,7 @@ class MinMaxAggregator(object):
     tracked.
     """
 
-    implements(INamedAggregator)
+    zope.interface.implements(INamedAggregator)
 
     def __init__(self, name, statistic):
         """
@@ -220,6 +247,18 @@ class MinMaxAggregator(object):
         self._max.refresh()
         self._min.refresh()
 
+    def getValue(self):
+        """
+        Get the value of this aggregator (do nothing).
+        """
+        return None
+
+    def localValue(self):
+        """
+        Return the statistic local to this node.
+        """
+        return self._statistic_function()
+
 
 class UpdateAggregator(NamedAggregator):
     """
@@ -234,7 +273,8 @@ class UpdateAggregator(NamedAggregator):
         if vectorClock:
             self._vectorClock = copy.deepcopy(vectorClock)
         else:
-            self._vectorClock = copy.deepcopy(connections.getMe().getVectorClock())
+            self._vectorClock = copy.deepcopy(
+                connections.getMe().getVectorClock())
 
 
     def getVectorClock(self):
@@ -278,7 +318,8 @@ class UpdateAggregator(NamedAggregator):
 DISK_AVAILABLE = MinMaxAggregator('diskavailable', stats.disk_free)
 NETWORK_LOAD = MinMaxAggregator('networkload', stats.network_load_single_stat)
 DISK_LOAD = MinMaxAggregator('diskload', stats.disk_load_single_stat)
-#CPU_LOAD = MinMaxAggregator('cpuload', stats.cpu_load)
+CPU_LOAD = MinMaxAggregator('cpuload', stats.cpu_utilization)
+CPU_COUNT = MinMaxAggregator('cpucount', stats.cpu_count)
 PMEM_AVAILABLE = MinMaxAggregator('pmemavailable', stats.physical_mem_free)
 NODE_COUNT = UpdateAggregator('nodecount', stats.timber_node_count)
 LOG_COUNT = UpdateAggregator('logcount', logger.logCount)
@@ -287,7 +328,8 @@ STATISTICS = {
     'diskavailable': DISK_AVAILABLE, 
     'networkload': NETWORK_LOAD, 
     'diskload': DISK_LOAD,
-    #'cpuload': CPU_LOAD, 
+    'cpuload': CPU_LOAD,
+    'cpucount': CPU_COUNT,
     'pmemavailable': PMEM_AVAILABLE, 
     'nodecount': NODE_COUNT, 
     'logcount':LOG_COUNT

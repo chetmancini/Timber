@@ -51,16 +51,15 @@ if mongoDatabase:
     debug("PyMongo database authenticated.", success=True)
 
 
-try:
-    validation_data = mongoDatabase.validate_collection(
-        config.MONGO_DB_LOG_COLLECTION)
+validation_data = mongoDatabase.validate_collection(
+    config.MONGO_DB_LOG_COLLECTION)
 
-    debug("PyMongo validating database collection")
-except:
-    database.create_collection(
-        config.MONGO_DB_LOG_COLLECTION)
+debug("PyMongo validating database collection", info=True)
 
-    debug("PyMongo could not find collection. Creating collection.")
+database.create_collection(
+    config.MONGO_DB_LOG_COLLECTION)
+
+debug("PyMongo could not find collection. Creating collection.", info=True)
 
 mongoCollection = pymongo.collection.Collection(
     mongoDatabase, 
