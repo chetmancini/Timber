@@ -15,6 +15,8 @@
 ### Imports ##################################################################
 # Python Library Imports
 import argparse
+import sys
+import traceback
 
 # External Library Imports
 from twisted.internet import reactor
@@ -72,7 +74,7 @@ def parse_args():
 
     parser.add_argument('--version', 
         action='version', 
-        version=timber.__version__,
+        version=timber_simple.__version__,
         help='Report system version.')
 
     parser.add_argument('--hissoff', 

@@ -14,6 +14,8 @@
 ### Imports ##################################################################
 # Python Library imports
 import random
+import sys
+import traceback
 
 # External library imports
 
@@ -66,7 +68,7 @@ def membersRefresh():
             for member in newmembers:
                 if len(member) > 6:
                     memberNode = nodes.buildNode(member)
-                    if connections.getMe().__eq__(memberNode):
+                    if connections.getMe().getUid == memberNode.getUid():
                         result = True #Really should send a noop.
                         if result:
                             members.add(memberNode)
@@ -74,8 +76,11 @@ def membersRefresh():
                             debug("Noop failed. Node removed.", info=True)
         members.add(connections.getMe().getBaseData())
         debug("Members refresh procedure ran.", success=True)
-        debug("There are " + str(len(members)) + " in the system.", info=True)
-    except:
+        debug("There are " + str(len(members)) + " members in the system.", 
+            info=True)
+    except Exception as e:
+        print e
+        traceback.print_exc(file=sys.stdout)
         debug("Members refresh failed", error=True)
 
     persistSet()
@@ -88,7 +93,9 @@ def persistSet():
         output = ""
         for member in members:
             output += member.getCompressed() + GLUE
+        debug("String to persist built", info=True)
         simpledb.putAttribute(ITEMKEY, ATTRIBUTENAME, output)
         debug("Member set persisted correctly", success=True)
     except:
+        traceback.print_exc(file=sys.stdout)
         debug("Persist set failed", error=True)

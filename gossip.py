@@ -22,6 +22,8 @@
 ### Imports ##################################################################
 # Python Libary Imports
 import Queue
+import sys
+import traceback
 
 # External Library Imports
 from zope.interface import Interface, implements
@@ -136,10 +138,11 @@ class GossipServerFactory(ServerFactory):
         """
         Factory Constructor
         """
-        self.membersLoop = task.LoopingCall(connections.maintainMembers())
+        # We want to run members refresh every once in awhile
+        self.membersLoop = task.LoopingCall(connections.maintainMembers)
         self.membersLoop.start(config.MEMBERS_REFRESH_INTERVAL, True)
 
-        #self.clients = []
+        # Run gossip on a timer.
         self.gossipLoop = task.LoopingCall(self.gossip)
         self.gossipLoop.start(config.GOSSIP_WAIT_SECONDS, False)
 

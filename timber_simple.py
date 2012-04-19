@@ -78,7 +78,7 @@ class TimberRootResource(resource.Resource):
         localhost:8000/
         """
         debug("GET request received at Root on " + \
-            connnections.getMe().getIp(), info=True)
+            connections.getMe().getIp(), info=True)
         return 'Welcome to the REST API'
 
     def getChild(self, name, request):

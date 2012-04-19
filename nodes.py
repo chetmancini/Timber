@@ -18,6 +18,8 @@ import random
 import uuid
 import socket
 import cPickle
+import sys
+import traceback
 
 # External Library imports
 import zope.interface
@@ -28,6 +30,7 @@ import config
 import connections
 import vectorClock
 from debug import debug
+from timber_exceptions import GeneralError
 
 ### Classes ##################################################################
 class INode(zope.interface.Interface):
@@ -85,13 +88,19 @@ class BaseNode(object):
         Constructor
         """
         self._ip = ip
+
         if port:
             self._port = port
         else:
             self._port = config.RECEIVE_PORT
 
         if uid:
-            self._uid = uid
+            if type(uid) is uuid.UUID:
+                self._uid = uid
+            else:
+                debug("Can't construct with a uid string!", error=True)
+                debug(uid, error=True)
+                raise GeneralError("Can't construct with a uid string.")
         else:
             self._uid = uuid.uuid1()
 
@@ -125,17 +134,23 @@ class BaseNode(object):
         """
         return cPickle.dumps(self)
 
-    def getCompressed(self):
-        """
-        Get compressed verision of this node.
-        """
-        toReturn = ExternalNode()
+    def getBaseData(self):
+        toReturn = BaseNode(self._ip)
         toReturn._uid = self._uid
         toReturn._port = self._port
-        toReturn._ip = self._ip
-        return cPickle.dumps(toReturn)
+        toReturn._ip = self._ip    
+        return toReturn
+
+    def getCompressed(self):
+        """
+        get a compressed and serialized verion.
+        """
+        return self.getBaseData().getSerialized()
 
     def __eq__(self, other):
+        """
+        Equivalence checking
+        """
         return (self.getUid() == other.getUid())
 
     def __str__(self):
@@ -162,7 +177,6 @@ class ExternalNode(BaseNode):
         Open a new TCP connection from the local node to this node.
         """
         debug("Opening a new connection", info=True)
-        #tcpConnection = connections.HissTCPClientConnection(self, )
         pass
 
     def setTCPConnection(self, tcpConnection):
@@ -197,8 +211,6 @@ class ExternalNode(BaseNode):
         self._tcpConnection = None
 
 
-
-
 class CurrentNode(BaseNode):
     """
     Wrapper class to represent current node.
@@ -210,6 +222,8 @@ class CurrentNode(BaseNode):
         """
         if ip == None:
             ip = socket.gethostbyname(socket.gethostname())
+        if port == None:
+            port = config.RECEIVE_PORT
         super(CurrentNode, self).__init__(ip, port, None)
 
         self._vectorClock = vectorClock.VectorClock(self.getUid())
@@ -219,9 +233,6 @@ class CurrentNode(BaseNode):
         get the vector clock at this position.
         """
         return self._vectorClock
-
-    def getBaseData(self):
-        return BaseNode(self.getIp(), self.getPort(), self.getUid())
 
 
 class DoorNode(BaseNode):
@@ -261,4 +272,8 @@ def buildNode(nodestr):
     """
     Build a node from serialized form
     """
-    return cPickle.loads(nodestr)
+    try:
+        return cPickle.loads(str(nodestr))
+    except Exception as e:
+        debug("Could not depickle " + nodestr, error=True)
+        debug(e)

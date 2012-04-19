@@ -19,6 +19,7 @@
 import sys
 import os
 import string
+import traceback
 
 # Local Imports
 import config
@@ -55,20 +56,24 @@ def debug(msg, error=False, success=False, info=False, strange=False):
     """
     Main debug function.
     """
-    if DEBUG_FLG:
-        if error:
-            printError("! ERROR:\t" + msg)
-        elif success:
-            printMessage("* SUCCESS:\t" + msg)
-        elif info:
-            printMessage("- INFO:\t\t" + msg)
-        elif strange:
-            printMessage("? STRANGE\t" + msg)
+    if type(msg) is str:
+        if DEBUG_FLG:
+            if error:
+                printError("! ERROR:\t" + msg)
+            elif success:
+                printMessage("* SUCCESS:\t" + msg)
+            elif info:
+                printMessage("- INFO:\t\t" + msg)
+            elif strange:
+                printMessage("? STRANGE\t" + msg)
+            else:
+                printMessage(msg)
         else:
-            printMessage(msg)
+            if error:
+                printError("! ERROR:\t" + msg)
     else:
-        if error:
-            printError("ERROR:\t" + msg)
+        print "! ERROR", msg
+        traceback.print_exc(file=sys.stderr)
 
 def countLinesOfCode():
     """

@@ -16,13 +16,16 @@
 
 # External Library Imports
 import boto
+import sys
+import traceback
 
 # Local Imports
 import config
+from debug import debug
 
 ### Variables ################################################################
-domainExists = False
 sdbConnection = None
+sdbDomain = None
 
 ### Functions ################################################################
 def sdbConnect():
@@ -38,63 +41,82 @@ def sdbConnect():
                 config.AWS_SECRET_KEY)
             if sdbConnection:
                 debug("Connection to SimpleDB established", success=True)
+
         except Exception as e:
-            debug(e, error=True)
+            debug(e)
             debug("Failed to connect to SimplDB", error=True)
+            raise
+    else:
+        return
 
 def initDomain():
     """
     Initialize the domain so items can be stored.
     """
-    global domainExists
+    global sdbConnection
+    global sdbDomain
 
-    if not domainExists:
+    sdbConnect()
+
+    if not sdbDomain:
         try:
-            sdbConnection.create_domain(config.AWS_SDB_DOMAIN_NAME)
-            debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + "created", 
+            sdbDomain = sdbConnection.create_domain(config.AWS_SDB_DOMAIN_NAME)
+            debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + " created", 
                 success=True)
-            domainExists = True
+
         except Exception as e:
-            debug(e, error=True)
+            debug(e)
             debug("Could not create domain on SimpleDB.", error=True)
+            raise
+    else:
+        return
 
 def putAttribute(item, name, value):
     """
     Push a particular value for item and name, overwriting the old value.
     """
-    if not sdbConnection:
-        sdbConnect()
+    global sdbConnection
+    global domainExists
 
-    if not domainExists:
-        initDomain()
+    sdbConnect()
+    initDomain()
 
     try:
-        toput = boto.sdb.item.Item(
-            config.AWS_SDB_DOMAIN_NAME, item)
-
-        toput.add_value(name, value)
-
-        sdbConnection.putAttributes(
-            config.AWS_SDB_DOMAIN_NAME, item, toput, True)
+        sdbDomain.put_attributes(item, {name:value}, True)
     except Exception as e:
-        debug(e, error=True)
-        debug("Failed to PUT item in SimpleDB (" + value + ")", error=True)
+        debug("Failed to PUT item in SimpleDB", error=True)
+        debug(e)
+        raise
 
 def getAttribute(item, name):
     """
     Get a particular value for an item and name.
     """
-    if not domainExists:
-        initDomain()
+    global sdbConnection
+
+    sdbConnect()
+    initDomain()
 
     try:
-        return sdbConnection.getAttributes(domainName, item, name)
-    except:
+        return sdbDomain.get_attributes(item, name)[name]
+    except Exception as e:
         debug("Failed to GET item from SimpleDB", error=True)
+        debug(e)
+        raise
 
 def destroyDomain():
     """
     Delete the domain. Warning, deletes all items as well!
     """
-    sdbConnection.delete_domain(domainName)
-    domainExists = False
+    global sdbConnection
+
+    sdbConnect()
+
+    try:
+        sdbConnection.delete_domain(config.AWS_SDB_DOMAIN_NAME)
+        sdbDomain = None
+        return
+    except Exception as e:
+        debug("Could not delete domain from SimpleDB", error=True)
+        debug(e)
+        raise

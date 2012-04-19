@@ -17,6 +17,8 @@
 # Python Library Imports
 import uuid
 import random
+import sys
+import traceback
 
 # External Library Imports
 import twisted.internet.tcp
@@ -138,6 +140,7 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         except:
             debug("Connection failed to write msg: " + msg.getCode(), 
                 error=True)
+            traceback.print_exc(file=sys.stdout)
 
 
 ### Variables ################################################################
@@ -167,9 +170,9 @@ UIDs known to be dead.
 
 def init():
     global me
-    
+
     me = nodes.CurrentNode()
-    debug("Init called. Node is " + me.__str__())
+    debug("Init called. Node is " + me.getUid(), info=True)
 
 
 def getMe():
@@ -178,6 +181,8 @@ def getMe():
     return me
 
 def maintainMembers():
+    debug("Running maintain members.", info=True)
+
     possibledead = set(universe.keys())
 
     group_membership.membersRefresh()
@@ -192,7 +197,6 @@ def maintainMembers():
     # Remove dead nodes
     for dead in possibledead:
         deadNode(dead)
-    
 
 def lookupNode(uid):
     """
@@ -248,7 +252,7 @@ def connectToNeighbors():
     for uid in getNeighbors():
         externalnode = connections.lookupNode(uid)
         if not externalnode.hasTCPConnection():
-            debug("opening a client connection")
+            debug("opening a client connection", info=True)
             externalnode.openTCPConnection()
         else:
             pass #all good.
@@ -257,6 +261,7 @@ def connectionMade(client):
     """
     Called when a connection is made. Not sure how to use this yet.
     """
+    debug("Connection has been made?", info=True)
     pass
 
     """def createNode(uid, ip, port):
@@ -321,7 +326,7 @@ def globalReset():
     """
     RESENT EVERYTHING BACK TO ZERO!! CAREFUL!!
     """
-    pass
+    debug("GLOBAL RESET. AAAGGG!", info=True)
     me = None
     for uid in universe:
         deadNode(uid)

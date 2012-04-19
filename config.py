@@ -81,7 +81,7 @@ Hostname of the Mongo server/cluster. Default: localhost
 
 MONGO_DB_LOG_COLLECTION = "timber_log"
 
-MEMBERS_REFRESH_INTERVAL = 15
+MEMBERS_REFRESH_INTERVAL = 23
 
 AWS_SECRET_KEY = "7rPpW/1gJ7gNGu6sSyLMxuhYxDPowifIeeFJy0lk"
 AWS_ACCESS_KEY = "AKIAIGOASEZFJITFFO4Q"
