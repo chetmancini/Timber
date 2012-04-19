@@ -10,14 +10,19 @@
 #----------------------------------------------------------------------------#
 # exceptions.py                                                              #
 ##############################################################################
+import zope.interface
 
 ### Imports ##################################################################
+class IError(zope.interface.Interface):
+    pass
 
 ### Classes ##################################################################
 class Error(Exception):
     """
     Base class for exceptions in this module.
     """
+
+    zope.interface.implements(IError)
 
     def __init__(self, value):
         """

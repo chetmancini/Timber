@@ -91,11 +91,9 @@ class GossipServerProtocol(Protocol):
         """
         When gossip data is received.
         """
+        debug("Raw data received", info=True)
         msg = message.buildMessage(data)
-        #debug("Gossip Data Received on " + connections.getMe().getIp() 
-        #+ " from " + msg.getSender().getIp())
-        #if msg.isIsAliveMessage():
-        #    self.transport.write(connections.getMe().getUid())
+
         msg.respond() # just respond polymorphically.
 
 class GossipClientProtocol(Protocol):
@@ -187,6 +185,8 @@ class GossipServerFactory(ServerFactory):
             gossipMessages.append(toAppend)
             gossipmsg = gossipPrepare()
 
+        debug("There are " \
+            + str(len(gossipMessages)) + " to send.", threshold=2, info=True)
 
         # Send out the messages
         for msg in gossipMessages:
@@ -203,8 +203,9 @@ class GossipServerFactory(ServerFactory):
         """
         When a node is found
         """
-        #self.clients.append(client)
-        debug("Receiving client " + str(client.transport.getPeer()))
+        debug("Receiving client " + str(client.transport.getPeer()), 
+            info=True)
+
         connections.foundClient(client.transport)
 
     def clientConnectionLost(self, client, reason):
@@ -212,7 +213,8 @@ class GossipServerFactory(ServerFactory):
         When a node is lost.
         """
         debug("Lost client " + str(client.transport.getPeer()) + \
-            " for reason " + str(reason))
+            " for reason " + str(reason), info=True)
+
         connections.lostClient(client.transport)
 
 
@@ -231,29 +233,32 @@ class GossipClientFactory(ReconnectingClientFactory):
         self.errback = errback
 
     def clientConnectionFailed(self, connector, reason):
-        debug("Client Connection failed for reason: " + reason)
+        debug("Client Connection failed for reason: " + reason, info=True)
         self.errback(reason)
 
     def clientConnectionLost(self, connector, unused_reason):
-        debug("Client Connection lost!")
+        debug("Client Connection lost!", info=True)
         self.errback(reason)
 
     def startedConnecting(self, connector):
-        debug("Client Factory started connecting...")
+        debug("Client Factory started connecting...", info=True)
         pass
 
     def startFactory(self):
-        debug("Client Factory Started.")
+        debug("Client Factory Started.", info=True)
         pass #good for connectiong, opening fiels, etc..
 
     def stopFactory(self):
-        debug("Client Factory Stopped.")
+        debug("Client Factory Stopped.", info=True)
         pass #good for disconnectiong databases, closing files.
 
 
 ### Functions ################################################################
 def gossipRun():
-    debug("Launching Hiss Listener", info=True)
+
+    debug("Launching Hiss Listener on port " + \
+        config.RECEIVE_PORT + ".", info=True)
+
     gossipServerFactory = GossipServerFactory()
     reactor.listenTCP(config.RECEIVE_PORT, gossipServerFactory)
 
@@ -262,8 +267,10 @@ def gossipThis(msg):
     Receive a gossiped Message from another node.
     """
     global gossipqueue
+
     debug("Received Gossip message: " + msg.__class__.__name__ + 
         " from " + msg.getSender() + " (" + msg.getCode() + ")", success=True)
+
     gossipqueue.put_nowait(msg)
 
 def gossipPrepare():

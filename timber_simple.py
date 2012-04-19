@@ -135,7 +135,7 @@ class TimberLoggingResource(resource.Resource):
             msg = message.ExternalLogMessage(logMessage, logLevel, logType)
             logger.logMessage(msg)
         except:
-            debug('problem logging')
+            debug('Problem logging', error=True)
             return "There was a problem logging the message"
         return "Message Logged!"
 
@@ -158,10 +158,11 @@ class TimberStatsResource(resource.Resource):
             name = content['stat']
             toReturn = aggregation.getAggregation(name)
             return json.dumps(toReturn)
+            debug("Sent back stat " + name, success=True)
         except Exception as e:
+            debug(e)
             debug("Could not return stat", error=True)
             return "Error. Sorry."
-        # TODO implement this!
 
     def render_POST(self, request):
         """
@@ -209,7 +210,9 @@ def timberSimpleRun():
 
     timber_factory = server.Site(root)
 
-    debug("Launching Timber listener.", info=True)
+    debug("Launching Timber listener on port " \
+        + str(config.LOG_PORT) + ".", info=True)
+    
     reactor.listenTCP(config.LOG_PORT, timber_factory)
 
 

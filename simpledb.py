@@ -13,14 +13,14 @@
 ##############################################################################
 
 ### Imports ##################################################################
+# Python library imports.
 
 # External Library Imports
 import boto
-import sys
-import traceback
 
 # Local Imports
 import config
+from timber_exceptions import GeneralError
 from debug import debug
 
 ### Variables ################################################################

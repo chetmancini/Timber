@@ -59,7 +59,15 @@ def init_stats():
     """
     Initialization for stats. Not used currently
     """
-    pass
+    global p
+    global timber_io_stat
+    global disk_io_stat
+    global network_io_stat
+
+    p = psutil.Process(os.getpid())
+    timber_io_stat = p.get_io_counters()
+    disk_io_stat = psutil.disk_io_counters()
+    network_io_stat = psutil.network_io_counters()
 
 # Physical RAM #
 def physical_mem_size():
@@ -201,7 +209,8 @@ def disk_load():
 
         disk_io_stat = new_stat
         return readCount,writeCount,readBytes,writeBytes,readTime,writeTime
-    except:
+    except Exception as e:
+        debug(e)
         debug("Disk load data pull failed", error=True)
 
 def disk_load_single_stat():
@@ -240,7 +249,8 @@ def network_load():
 
         network_io_stat = new_stat #apply new values
         return receivedPackets,sentPackets,receivedBytes,receivedPackets
-    except:
+    except Exception as e:
+        debug(e)
         debug("Network load data pull failed", error=True)
 
 def network_load_single_stat():
@@ -284,7 +294,8 @@ def timber_load():
         timber_io_stat = new_stat
 
         return readCount,writeCount,readBytes,writeBytes
-    except:
+    except Exception as e:
+        debug(e)
         debug("Timber load data pulled failed", error=True)
 
 def timber_node_count():

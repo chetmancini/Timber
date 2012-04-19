@@ -109,13 +109,15 @@ class Aggregator(object):
 
     def getValue(self):
         """
-        Return the value of the aggregation. This is the value associated with that UID.
+        Return the value of the aggregation. 
+        This is the value associated with that UID.
         """
         return self._value
 
     def reduce(self, other):
         """
-        Reduce from another object value. For example it might keep a Max by comparing
+        Reduce from another object value. 
+        For example it might keep a Max by comparing
         successive reduced values.
         """
         pass #retain by default. subclass and override to implement.

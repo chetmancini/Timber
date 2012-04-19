@@ -55,6 +55,12 @@ def parse_args():
         help='The port for the gossip system to listen on. \
             (Integer, default: %(default)s)')
 
+    parser.add_argument('--sendport',
+        default=config.DEFAULT_SEND_PORT,
+        type=int,
+        help='the port for the gossip system to send on \
+            (Integer, default %(default)s)')
+
     parser.add_argument('--logport', 
         default=config.DEFAULT_LOG_PORT, 
         type=int,
@@ -93,6 +99,7 @@ def applyArgs(namespace):
     Apply the arguments to the config file
     """
     config.RECEIVE_PORT = namespace.port
+    config.SEND_PORT = namespace.sendport
     config.LOG_PORT = namespace.logport
     config.GOSSIP_WAIT_SECONDS = namespace.interval
     config.INTERFACE = namespace.iface

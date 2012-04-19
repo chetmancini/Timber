@@ -26,6 +26,7 @@ import config
 
 ### Globals ##################################################################
 DEBUG_FLG = True
+THRESHOLD = 1 # scale of 1 to 10
 
 ### Functions ################################################################
 def printError(msg):
@@ -52,12 +53,18 @@ def logMessage(msg):
     """
     printMessage(msg)
 
-def debug(msg, error=False, success=False, info=False, strange=False):
+def debug(
+    msg, 
+    threshold=5, 
+    error=False, 
+    success=False, 
+    info=False, 
+    strange=False):
     """
     Main debug function.
     """
     if type(msg) is str:
-        if DEBUG_FLG:
+        if DEBUG_FLG and threshold >= THRESHOLD:
             if error:
                 printError("! ERROR:\t" + msg)
             elif success:
@@ -69,7 +76,7 @@ def debug(msg, error=False, success=False, info=False, strange=False):
             else:
                 printMessage(msg)
         else:
-            if error:
+            if error and threshold >= THRESHOLD:
                 printError("! ERROR:\t" + msg)
     else:
         print "! ERROR", msg
