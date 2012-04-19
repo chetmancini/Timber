@@ -47,6 +47,11 @@ class IAggregator(zope.interface.Interface):
         Get the local value of the stat at this node.
         """
 
+    def getStatistic():
+        """
+        Get this as a dictionary.
+        """
+
 class INamedAggregator(zope.interface.Interface):
     """
     Interface for aggregators with name.
@@ -70,6 +75,11 @@ class INamedAggregator(zope.interface.Interface):
     def getLocalValue():
         """
         Get the local value of this stat at this node.
+        """
+
+    def getStatistic():
+        """
+        Get this as a dictionary.
         """
 
 ### Classes ##################################################################
@@ -124,6 +134,14 @@ class Aggregator(object):
         """
         return self._statistic_function()
 
+    def getStatistic(self):
+        """
+        Get this stat as a dictionary.
+        """
+        toReturn = {}
+        toReturn['key'] = self._key
+        toReturn['value'] = self._value
+        return toReturn
 
 class NamedAggregator(Aggregator):
     """
@@ -143,6 +161,14 @@ class NamedAggregator(Aggregator):
         Get the name
         """
         return self._name
+
+    def getStatistic(self):
+        """
+        Get as a dictionary
+        """
+        toReturn = super.getStatistic()
+        toReturn['name'] = self._name
+        return toReturn
 
 
 class MinAggregator(NamedAggregator):
@@ -253,6 +279,12 @@ class MinMaxAggregator(object):
         """
         return None
 
+    def getStatistic(self):
+        toReturn = {}
+        toReturn['min'] = self.getMinAggregator().getStatistic()
+        toReturn['min'] = self.getMaxAggregator().getStatistic()
+        return toReturn
+
     def localValue(self):
         """
         Return the statistic local to this node.
@@ -315,25 +347,61 @@ class UpdateAggregator(NamedAggregator):
 
 ### Globals ##################################################################
 
-DISK_AVAILABLE = MinMaxAggregator('diskavailable', stats.disk_free)
-NETWORK_LOAD = MinMaxAggregator('networkload', stats.network_load_single_stat)
-DISK_LOAD = MinMaxAggregator('diskload', stats.disk_load_single_stat)
-CPU_LOAD = MinMaxAggregator('cpuload', stats.cpu_utilization)
-CPU_COUNT = MinMaxAggregator('cpucount', stats.cpu_count)
-PMEM_AVAILABLE = MinMaxAggregator('pmemavailable', stats.physical_mem_free)
-NODE_COUNT = UpdateAggregator('nodecount', stats.timber_node_count)
-LOG_COUNT = UpdateAggregator('logcount', logger.logCount)
-
-STATISTICS = {
-    'diskavailable': DISK_AVAILABLE, 
-    'networkload': NETWORK_LOAD, 
-    'diskload': DISK_LOAD,
-    'cpuload': CPU_LOAD,
-    'cpucount': CPU_COUNT,
-    'pmemavailable': PMEM_AVAILABLE, 
-    'nodecount': NODE_COUNT, 
-    'logcount':LOG_COUNT
-    }
+STATISTICS = {}
 """
 These are stats we would like to be accessible in the system
 """
+
+### Functions ################################################################
+
+def stats_init():
+    global STATISTICS
+
+    DISK_AVAILABLE = MinMaxAggregator(
+        'diskavailable', stats.disk_free)
+
+    NETWORK_LOAD = MinMaxAggregator(
+        'networkload', stats.network_load_single_stat)
+
+    DISK_LOAD = MinMaxAggregator(
+        'diskload', stats.disk_load_single_stat)
+
+    CPU_LOAD = MinMaxAggregator(
+        'cpuload', stats.cpu_utilization)
+
+    CPU_COUNT = MinMaxAggregator(
+        'cpucount', stats.cpu_count)
+
+    PMEM_AVAILABLE = MinMaxAggregator(
+        'pmemavailable', stats.physical_mem_free)
+
+    NODE_COUNT = UpdateAggregator(
+        'nodecount', stats.timber_node_count)
+
+    LOG_COUNT = UpdateAggregator(
+        'logcount', logger.logCount)
+
+    STATISTICS = {
+        'diskavailable': DISK_AVAILABLE, 
+        'networkload': NETWORK_LOAD, 
+        'diskload': DISK_LOAD,
+        'cpuload': CPU_LOAD,
+        'cpucount': CPU_COUNT,
+        'pmemavailable': PMEM_AVAILABLE, 
+        'nodecount': NODE_COUNT, 
+        'logcount':LOG_COUNT
+        }
+
+def getAggregation(name, local=False, minOnly=False, maxOnly=False):
+    """
+    Get aggregation.
+    """
+    toReturn = STATISTICS[name].getStatistic()
+    if local:
+        return STATISTICS[name].getLocalValue()
+    elif minOnly and "min" in toReturn:
+        return toReturn["min"]
+    elif maxOnly and "max" in toReturn:
+        return toReturn["max"]
+    else:
+        return toReturn

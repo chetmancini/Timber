@@ -35,6 +35,7 @@ import config
 import connections
 import message
 import aggregation
+import group_membership
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
@@ -135,10 +136,13 @@ class GossipServerFactory(ServerFactory):
         """
         Factory Constructor
         """
+        self.membersLoop = task.LoopingCall(connections.maintainMembers())
+        self.membersLoop.start(config.MEMBERS_REFRESH_INTERVAL, True)
 
         #self.clients = []
-        self.lc = task.LoopingCall(self.gossip)
-        self.lc.start(config.GOSSIP_WAIT_SECONDS, False)
+        self.gossipLoop = task.LoopingCall(self.gossip)
+        self.gossipLoop.start(config.GOSSIP_WAIT_SECONDS, False)
+
         debug("Gossip Server Factory created!", success=True)
 
     def gossip(self):

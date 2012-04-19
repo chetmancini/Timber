@@ -18,6 +18,7 @@
 # Python Library Imports
 import sys
 import os
+import string
 
 # Local Imports
 import config
@@ -71,7 +72,7 @@ def debug(msg, error=False, success=False, info=False, strange=False):
 
 def countLinesOfCode():
     """
-    Procedure to count total lines of code.
+    Procedure to count total lines of code in each file
     """
     total = 0
     path = '../Timber'
@@ -80,8 +81,12 @@ def countLinesOfCode():
         if fname[-2:] == "py":
             with open(fname) as f:
                 for i, l in enumerate(f):
-                    pass
-            total += i + 1
+                    if len(l) > 80:
+                        print "line " + str(i) + " of " \
+                            + fname + " is too long."
+            subtotal = i + 1
+            print string.rjust(fname, 25) + "\t" + str(subtotal)
+            total += subtotal
     print total
 
 if __name__ == "__main__":
@@ -92,9 +97,10 @@ if __name__ == "__main__":
     import nodes
     import gossip
     import logger
-    import exceptions
+    import timber_exceptions
     import vectorClock
     import message
+    import messagequeue
     import group_membership
     import simpledb
     import timber_simple

@@ -20,7 +20,7 @@ import argparse
 from twisted.internet import reactor
 
 # Local Imports
-import timber
+import aggregation
 import timber_simple
 import gossip
 import config
@@ -105,6 +105,7 @@ def main():
     applyArgs(args)
 
     connections.init()
+    aggregation.stats_init()
 
     if not args.timberoff:
         timber_simple.timberSimpleRun()

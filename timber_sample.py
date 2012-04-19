@@ -50,8 +50,10 @@ class AddValue(resource.Resource):
         '''
         try:
             values.append(request.args['name'][0])
-            log.msg('Value added: %s' %(request.args['name'][0]))
-            log.msg('Current values:%s' %(','.join(str(val) for val in values)))
+            log.msg(
+                'Value added: %s' %(request.args['name'][0]))
+            log.msg(
+                'Current values:%s' %(','.join(str(val) for val in values)))
             return json.dumps(values)
         except:
             log.err()

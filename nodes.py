@@ -57,6 +57,16 @@ class INode(zope.interface.Interface):
         Get this node in a serialized form
         """
 
+    def getCompressed():
+        """
+        Get comrpessed version of this node.
+        """
+
+    def __eq__(other):
+        """
+        Equivalence
+        """
+
     def __str__():
         """
         Get this as a string
@@ -115,11 +125,24 @@ class BaseNode(object):
         """
         return cPickle.dumps(self)
 
+    def getCompressed(self):
+        """
+        Get compressed verision of this node.
+        """
+        toReturn = ExternalNode()
+        toReturn._uid = self._uid
+        toReturn._port = self._port
+        toReturn._ip = self._ip
+        return cPickle.dumps(toReturn)
+
+    def __eq__(self, other):
+        return (self.getUid() == other.getUid())
+
     def __str__(self):
         """
         Get a string representation of this node. Used mostly for debug.
         """
-        return self.getIp() + ":" + str(self.getPort())
+        toReturn = self.getIp() + ":" + str(self.getPort())
 
 class ExternalNode(BaseNode):
     """

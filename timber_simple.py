@@ -48,8 +48,17 @@ from twisted.python import components, log
 # Local Imports
 import config
 import connections
+import aggregation
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
+
+### Application ##############################################################
+__version__ = "0.0.1"
+__web__ = "github.com/chetmancini"
+__author__ = "Chet Mancini"
+__author_email__ = "cam479 at cornell dot edu"
+__licence__ = "Apache"
+__warranty__ = "None"
 
 ### Methods ##################################################################
 
@@ -68,7 +77,8 @@ class TimberRootResource(resource.Resource):
         get response method for the root resource
         localhost:8000/
         """
-        debug("GET request received at Root on " + connnections.getMe().getIp())
+        debug("GET request received at Root on " + \
+            connnections.getMe().getIp(), info=True)
         return 'Welcome to the REST API'
 
     def getChild(self, name, request):
@@ -141,13 +151,23 @@ class TimberStatsResource(resource.Resource):
         """
         debug("Recevied GET on stat resouce")
         requestDict = request.__dict__
+        requestArgs = request.args
+        rawcontent = request.content.read()
+        content = json.loads(rawcontent)
+        try:
+            name = content['stat']
+            toReturn = aggregation.getAggregation(name)
+            return json.dumps(toReturn)
+        except Exception as e:
+            debug("Could not return stat", error=True)
+            return "Error. Sorry."
         # TODO implement this!
 
     def render_POST(self, request):
         """
         Post data to statistics. Not currently supported.
         """
-        debug("Invalid stats POST access")
+        debug("Invalid stats POST access", info=True)
         return "Sorry, POST access not provided"
 
 

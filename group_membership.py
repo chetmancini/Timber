@@ -20,6 +20,7 @@ import random
 # Local Imports
 import simpledb
 import connections
+import nodes
 from debug import debug
 
 ### Functions ################################################################
@@ -42,13 +43,13 @@ def getCurrentMemberSet():
     return members
 
 ### Variables ################################################################
-members = set([connections.me])
+members = set([])
 refreshWaitTime = getRandomWaitTime()
 
 ### Constants ################################################################
 ITEMKEY = "members"
 ATTRIBUTENAME = "members_list"
-
+GLUE = "&&&"
 ### Functions ################################################################
 def membersRefresh():
     """
@@ -61,18 +62,19 @@ def membersRefresh():
         members.clear()
         joined = simpledb.getAttribute(ITEMKEY, ATTRIBUTENAME)
         if (joined != None) and (len(joined) > 0):
-            newmembers = joined.split("&")
+            newmembers = joined.split(GLUE)
             for member in newmembers:
                 if len(member) > 6:
-                    memberNode = Node(member)
-                    if connections.me.getIp() != memberNode.getIp():
-                        result = False #Send NOOP
+                    memberNode = nodes.buildNode(member)
+                    if connections.getMe().__eq__(memberNode):
+                        result = True #Really should send a noop.
                         if result:
                             members.add(memberNode)
                         else:
-                            print "failed to add node"
-        members.add(connections.me)
+                            debug("Noop failed. Node removed.", info=True)
+        members.add(connections.getMe().getBaseData())
         debug("Members refresh procedure ran.", success=True)
+        debug("There are " + str(len(members)) + " in the system.", info=True)
     except:
         debug("Members refresh failed", error=True)
 
@@ -84,9 +86,8 @@ def persistSet():
     """
     try:
         output = ""
-        glue = "&"
         for member in members:
-            output += member.toString() + glue
+            output += member.getCompressed() + GLUE
         simpledb.putAttribute(ITEMKEY, ATTRIBUTENAME, output)
         debug("Member set persisted correctly", success=True)
     except:

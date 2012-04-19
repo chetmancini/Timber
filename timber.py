@@ -152,7 +152,9 @@ class TimberProtocol(protocol.Protocol):
     def connectionMade(self):
         self.transport.loseConnection()
         self.factory.numProtocols = self.factory.numProtocols+1 
-        #self.transport.write("Welcome! There are currently %d open connections.\n" % (self.factory.numProtocols,))
+        #self.transport.write(
+        #"Welcome! There are currently %d open connections.
+        #\n" % (self.factory.numProtocols,))
 
     def connectionLost(self, reason):
         self.factory.numProtocols = self.factory.numProtocols-1
@@ -232,10 +234,12 @@ if __name__ == '__main__':
     # create the listening socket when it is started
     #timber_factory = TimberFactory(timber_service)
 
-    """    log_service = internet.TCPServer(config.DEFAULT_LOG_PORT, timber_factory, interface=iface)
+    """    log_service = internet.TCPServer(
+        config.DEFAULT_LOG_PORT, timber_factory, interface=iface)
     log_service.setServiceParent(serviceCollection)"""
 
-    """    gossip_service = internet.TCPServer(config.DEFAULT_RECEIVE_PORT, factory, interface=iface)
+    """    gossip_service = internet.TCPServer(
+        config.DEFAULT_RECEIVE_PORT, factory, interface=iface)
     gossip_service.setServiceParent(serviceCollection)"""
 
     log_server = TCPServer(config.DEFAULT_LOG_PORT, Site(root))

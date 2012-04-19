@@ -27,6 +27,7 @@ from zope.interface import Interface, implements
 import config
 import message
 import nodes
+import group_membership
 from debug import debug
 
 ### Classes ##################################################################
@@ -98,6 +99,9 @@ class HissConnection(object):
 
 
 class HissTCPClientConnection(twisted.internet.tcp.Client):
+    """
+    HissTCPClientConnection. An subtype of tcp client for use in Hiss.
+    """
 
     def __init__(self, parentNode, client):
         """
@@ -136,8 +140,6 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
                 error=True)
 
 
-
-
 ### Variables ################################################################
 me = None
 """
@@ -156,6 +158,9 @@ set of uids to gossip with.
 """
 
 knownDead = set([])
+"""
+UIDs known to be dead.
+"""
 
 
 ### Functions ################################################################
@@ -166,10 +171,28 @@ def init():
     me = nodes.CurrentNode()
     debug("Init called. Node is " + me.__str__())
 
+
 def getMe():
     if not me:
         init()
     return me
+
+def maintainMembers():
+    possibledead = set(universe.keys())
+
+    group_membership.membersRefresh()
+
+    # Add in new nodes.
+    for member in group_membership.getCurrentMemberSet():
+        if member.getUid() not in universe:
+            if not getMe().__eq__(member):
+                universe[member.getUid()] = member
+                possibledead.remove(member.getUid())
+
+    # Remove dead nodes
+    for dead in possibledead:
+        deadNode(dead)
+    
 
 def lookupNode(uid):
     """
@@ -231,6 +254,9 @@ def connectToNeighbors():
             pass #all good.
 
 def connectionMade(client):
+    """
+    Called when a connection is made. Not sure how to use this yet.
+    """
     pass
 
     """def createNode(uid, ip, port):
@@ -246,6 +272,7 @@ def deadNode(uid):
     global neighbors
     global universe
     try:
+        lookupNode(uid).destroyTCPConnection()
         neighbors.remove(uid)
         universe.remove(uid)
     finally:
@@ -295,4 +322,9 @@ def globalReset():
     RESENT EVERYTHING BACK TO ZERO!! CAREFUL!!
     """
     pass
-    # Todo implement.
+    me = None
+    for uid in universe:
+        deadNode(uid)
+    universe = {}
+    neighbors = {}
+    init()

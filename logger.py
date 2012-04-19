@@ -25,8 +25,8 @@ connection = None
 channel = None
 logcount = 0
 
-### Functions #######################################################
-def logMessage(messageObject):
+### Functions ################################################################
+def logMessage(msgObject):
     """
     Log a messsage
     """
@@ -35,9 +35,9 @@ def logMessage(messageObject):
     global connection
 
     if USE_QUEUE:
-        if (messageObject.getCode() != "EL") or (messageObject.getCode() != "IL"):
+        if (msgObject.getCode() != "EL") or (msgObject.getCode() != "IL"):
 
-            debug("Invalid message" + messageObject.getCode(), error=True)
+            debug("Invalid message" + msgObject.getCode(), error=True)
             raise "Invalid message"
 
         if connection == None:
@@ -45,17 +45,17 @@ def logMessage(messageObject):
         if channel == None:
             channel = getChannel(connection)
 
-        messagequeue.producter_pushText(channel, messageObject)
+        messagequeue.producter_pushText(channel, msgObject)
     else:
-        if (messageObject.getCode() != "EL") or (messageObject.getCode() != "IL"):
+        if (msgObject.getCode() != "EL") or (msgObject.getCode() != "IL"):
 
-            debug("Invalid message" + messageObject.getCode(), error=True)
+            debug("Invalid message" + msgObject.getCode(), error=True)
             raise "Invalid message"
 
     try:
         persist.log(
-            messageObject.getLevel(), 
-            messageObject.getPayload(), 
+            msgObject.getLevel(), 
+            msgObject.getPayload(), 
             True)
 
         debug("Message logged", success=True)
