@@ -50,6 +50,11 @@ class INode(zope.interface.Interface):
         Get this node's UID as a hexadecimal string
         """
 
+    def getShortUid():
+        """
+        Get a short version of this uid.
+        """
+
     def getUidAsObject():
         """
         Get this node's uid as a python UID object.
@@ -128,6 +133,12 @@ class BaseNode(object):
         """
         return self._uid.hex
 
+    def getShortUid(self):
+        """
+        Get a short version of this uid
+        """
+        return self.getUid()[0:3]
+
     def getSerialized(self):
         """
         Get a serialized version of this node. Uses Pickle (cPickle)
@@ -177,6 +188,10 @@ class ExternalNode(BaseNode):
         Open a new TCP connection from the local node to this node.
         """
         debug("Opening a new connection", info=True)
+        ### TODO
+        connections.HissTCPClientConnection.fromPrimitives(
+            self,
+            self.getIp())
         pass
 
     def setTCPConnection(self, tcpConnection):

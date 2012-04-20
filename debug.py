@@ -23,10 +23,15 @@ import traceback
 
 # Local Imports
 import config
+import connections
 
-### Globals ##################################################################
+### Constants ################################################################
 DEBUG_FLG = True
 THRESHOLD = 1 # scale of 1 to 10
+INCLUDE_UID = True
+
+### Variables ################################################################
+shortUid = None
 
 ### Functions ################################################################
 def printError(msg):
@@ -63,21 +68,28 @@ def debug(
     """
     Main debug function.
     """
+    global shortUid
+
+    if not shortUid:
+        shortUid = connections.getMe().getShortUid()
+
+    uidstr = (shortUid + "\t") if INCLUDE_UID else ""
+
     if type(msg) is str:
         if DEBUG_FLG and threshold >= THRESHOLD:
             if error:
-                printError("! ERROR:\t" + msg)
+                printError("! ERROR:\t" + uidstr + msg)
             elif success:
-                printMessage("* SUCCESS:\t" + msg)
+                printMessage("* SUCCESS:\t" + uidstr + msg)
             elif info:
-                printMessage("- INFO:\t\t" + msg)
+                printMessage("- INFO:\t\t" + uidstr + msg)
             elif strange:
-                printMessage("? STRANGE\t" + msg)
+                printMessage("? STRANGE\t" + uidstr + msg)
             else:
                 printMessage(msg)
         else:
             if error and threshold >= THRESHOLD:
-                printError("! ERROR:\t" + msg)
+                printError("! ERROR:\t" + uidstr + msg)
     else:
         print "! ERROR", msg
         traceback.print_exc(file=sys.stderr)
@@ -120,6 +132,7 @@ if __name__ == "__main__":
     import stats
     import connections
     import aggregation
+    import demo
 
 
     countLinesOfCode()

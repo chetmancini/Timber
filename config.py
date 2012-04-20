@@ -13,18 +13,12 @@
 ##############################################################################
 
 ### Imports ##################################################################
-import nodes
+
 
 ############################ Constants (edit these) ##########################
 IPV6 = False
 """
 Whether to use IP version 6. turn off for now.
-"""
-
-DOORNODE_IP = '192.168.0.1'
-DOORNODE_PORT = 8080
-"""
-New nodes communicate with a doorway node. This information goes here.
 """
 
 DEFAULT_SEND_PORT = 30480
@@ -66,15 +60,17 @@ a message doesn't get stuck in system.
 Messages will be destroyed once they hit 0.
 """
 
+MONGO_DB_HOST = "staff.mongohq.com"
+MONGO_DB_PORT = 10005
 MONGO_DB_NAME = "timber"
+
 MONGO_DB_USER= "timber"
 MONGO_DB_PASSWORD = "timber360"
 """
 MongoDB login information
 """
 
-MONGO_DB_HOST = "127.0.0.1"
-MONGO_DB_PORT = 10001
+
 """
 Hostname of the Mongo server/cluster. Default: localhost
 """
@@ -91,8 +87,6 @@ Amazon Web Services Information
 """
 
 ######################## Don't edit below this line ##########################
-DOORNODE = nodes.DoorNode(DOORNODE_IP, DOORNODE_PORT)
-
 MONGO_URI = "mongodb://" + MONGO_DB_USER + ":" + MONGO_DB_PASSWORD + "@"
 MONGO_URI += MONGO_DB_HOST + ":" + str(MONGO_DB_PORT) + "/" + MONGO_DB_NAME
 
