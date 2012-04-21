@@ -28,6 +28,7 @@ from zope.interface import Interface, implements
 
 # Local Imports
 import config
+import me
 import message
 import nodes
 import group_membership
@@ -145,10 +146,6 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
 
 
 ### Variables ################################################################
-me = None
-"""
-Node representing my transport.
-"""
 
 universe = {}
 """
@@ -170,16 +167,8 @@ UIDs known to be dead.
 ### Functions ################################################################
 
 def init():
-    global me
-
-    me = nodes.CurrentNode()
+    me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
-
-
-def getMe():
-    if not me:
-        init()
-    return me
 
 def maintainMembers():
     debug("Running maintain members.", info=True)

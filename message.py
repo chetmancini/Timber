@@ -22,6 +22,7 @@ import zope.interface
 
 # Local Imports
 import config
+import me
 import vectorClock
 import connections
 from timber_exceptions import GeneralError, ConnectionError
@@ -92,7 +93,7 @@ class GenericMessage(object):
         if sender:
             self._sender = sender
         else:
-            self._sender = connections.getMe().getBaseData()
+            self._sender = me.getMe().getBaseData()
             # just assign basic node data to the sender.
 
         if recipients:
@@ -217,7 +218,7 @@ class VectorMessage(GenericMessage):
             if sender:
                 self._clockKey = sender.getUid()
             else:
-                self._clockKey = connections.getMe().getUid()
+                self._clockKey = me.getMe().getUid()
 
         self._code = "V"
         
@@ -235,7 +236,7 @@ class VectorMessage(GenericMessage):
 
     @staticmethod
     def createVectorClockMessage():
-        me = connections.getMe()
+        me = me.getMe()
         if me:
             return me.getVectorClock().createMessage()
         else:
@@ -292,7 +293,7 @@ class IsAliveMessage(NetworkStatusMessage):
         debug('respnding to an isalive message with a memessage', info=True)
         try:
             responseMsg = MeMessage(
-                connections.getMe().getUid(), 
+                me.getMe().getUid(), 
                 [self._sender.getUid()])
             responseMsg.send()
             debug('Sent MeMessage', success=True)
@@ -314,7 +315,7 @@ class MeMessage(NetworkStatusMessage):
         """
         super(MeMessage, self).__init__("", sender, recipients)
         self._code = 'M'
-        self._payload = (connections.getMe()).getSerialized()
+        self._payload = (me.getMe()).getSerialized()
 
     def respond(self):
         """
@@ -369,7 +370,7 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
         try:
             self.decrementTtl()
             if self.getTtl() > 0:
-                self._sender = connections.getMe().getBaseData()
+                self._sender = me.getMe().getBaseData()
                 self._recipients = []
                 # retain the same payload.
                 gossip.gossipThis(self)
@@ -485,7 +486,7 @@ class AggregateMessage(GossipNetworkStatusMessage):
         """
         Build an aggregate message for the aggregation in the param.
         """
-        return AggregateMessage(agg, connections.getMe().getUid())
+        return AggregateMessage(agg, me.getMe().getUid())
 
     @staticmethod
     def isAggregateMessage(msg):

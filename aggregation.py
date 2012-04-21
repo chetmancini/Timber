@@ -22,7 +22,7 @@ import psutil
 import zope.interface
 
 # Local imports
-import connections
+import me
 import logger
 import stats
 
@@ -94,7 +94,7 @@ class Aggregator(object):
         """
         Constructor
         """
-        self._key = connections.getMe().getUid()
+        self._key = me.getMe().getUid()
         self._statistic_function = statistic
         if statistic:
             self._value = self._statistic_function()
@@ -308,7 +308,7 @@ class UpdateAggregator(NamedAggregator):
             self._vectorClock = copy.deepcopy(vectorClock)
         else:
             self._vectorClock = copy.deepcopy(
-                connections.getMe().getVectorClock())
+                me.getMe().getVectorClock())
 
 
     def getVectorClock(self):
@@ -339,9 +339,9 @@ class UpdateAggregator(NamedAggregator):
         Refresh value from the statistic function.
         (only if the current vector clock is late)
         """
-        if connections.getMe().getVectorClock().cameAfter(
+        if me.getMe().getVectorClock().cameAfter(
             self.getVectorClock()):
-            self._key = connections.getMe().getUid()
+            self._key = me.getMe().getUid()
             self._value = self._statistic_function()
         else:
             pass # not relevant

@@ -21,7 +21,7 @@ import traceback
 
 # Local Imports
 import simpledb
-import connections
+import me
 import nodes
 from debug import debug
 
@@ -77,7 +77,7 @@ def membersRefresh():
             for memberUid in newMembersDict:
                 if len(memberUid) > 6:
                     memberNode = nodes.buildNode(newMembersDict[memberUid])
-                    if not connections.getMe().__eq__(memberNode):
+                    if not me.getMe().__eq__(memberNode):
                         result = True #Really should send a noop.
                         if result:
                             members[memberNode.getUid()] = memberNode
@@ -85,7 +85,7 @@ def membersRefresh():
                             debug("Noop failed. Node removed.", info=True)
                     else:
                         pass
-        members[connections.getMe().getUid()] = connections.getMe().getBaseData()
+        members[me.getMe().getUid()] = me.getMe().getBaseData()
 
         for key in members:
             if key in members_to_delete:

@@ -47,7 +47,7 @@ from twisted.python import components, log
 
 # Local Imports
 import config
-import connections
+import me
 import aggregation
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
@@ -78,7 +78,7 @@ class TimberRootResource(resource.Resource):
         localhost:8000/
         """
         debug("GET request received at Root on " + \
-            connections.getMe().getIp(), info=True)
+            me.getMe().getIp(), info=True)
         return 'Welcome to the REST API'
 
     def getChild(self, name, request):

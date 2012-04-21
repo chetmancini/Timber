@@ -23,7 +23,7 @@ import traceback
 
 # Local Imports
 import config
-import connections
+import me
 
 ### Constants ################################################################
 DEBUG_FLG = True
@@ -72,7 +72,10 @@ def debug(
     global shortUid
 
     if not shortUid:
-        shortUid = connections.getMe().getShortUid()
+        try:
+            shortUid = me.getMe().getShortUid()
+        except:
+            shortUid = ""
 
     uidstr = (shortUid + "\t") if INCLUDE_UID else ""
 
@@ -118,6 +121,7 @@ if __name__ == "__main__":
     """
     TEST ALL THE THINGS!!!1!
     """
+    import me
     import launch
     import nodes
     import gossip
