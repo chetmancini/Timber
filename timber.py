@@ -31,74 +31,34 @@ import logger
 import sys
 import json
 import errno
+import optparse
 import select
 import socket
 import datetime
 
 # External Library Imports
-#from OpenSSL import SSL
 from zope.interface import Interface, implements
 
-#   Twisted
 from twisted.web import server, resource, util
 from twisted.application import internet, service
 from twisted.internet import protocol, reactor
 from twisted.internet.protocol import Factory, Protocol
-from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.python import components, log
 
 # Local Imports
 import config
+import me
+import aggregation
+from timber_exceptions import GeneralError, ConnectionError
+from debug import debug
 
-### Information ##############################################################
+### Application ##############################################################
 __version__ = "0.0.1"
 __web__ = "github.com/chetmancini"
 __author__ = "Chet Mancini"
 __author_email__ = "cam479 at cornell dot edu"
 __licence__ = "Apache"
 __warranty__ = "None"
-
-### Globals ##################################################################
-#to make the process of adding new views less static
-'''VIEWS = {
-    'ListValues': ListValues(),
-    'AddValue': AddValue(),
-    'DeleteValue': DeleteValue(),
-    'ClearValues': ClearValues()
-    }'''
- 
-### Interfaces ###############################################################
-
-class ITimberProtocol(Interface):
-
-    def getCount(timePeriod):
-        """
-        Get total log items within a given time period
-        """
-
-    def getList(key):
-        """
-        Get all log items based on a given key
-        """
-
-class ITimberProtocolFactory(Interface):
-
-    def getStatic(key):
-        """
-        Return a deferred returning a string.
-        """
-
-    def buildProtocol(addr):
-        """
-        Return a protocol returning a string.
-        """
-
-class ITimberService(Interface):
-    pass
-
-
-class ITimberServiceFactory(Interface):
-    pass
 
 ### Methods ##################################################################
 
@@ -107,27 +67,110 @@ def catchError(err):
 
 ### Classes ##################################################################
 
-class TimberResource(resource.Resource):
+class TimberRootResource(resource.Resource):
     """
-    Timber Resource
+    Timber root resource
     """
 
     def render_GET(self, request):
+        """
+        get response method for the root resource
+        localhost:8000/
+        """
+        debug("GET request received at Root on " + \
+            me.getMe().getIp(), info=True)
         return 'Welcome to the REST API'
 
-    def render_POST(self, request):
-        requestDict = request.__dict__
-        content = request.content.getvalue()
-
-    '''def getChild(self, name, request):
+    def getChild(self, name, request):
+        """
+        We overrite the get child function so that we can handle invalid
+        requests
+        """
         if name == '':
             return self
         else:
-        if name in VIEWS.keys():
-            return resource.Resource.getChild(self, name, request)
-        else:
-            return PageNotFoundError()'''
-            
+            if name in APIS.keys():
+                return resource.Resource.getChild(self, name, request)
+            else:
+                return PageNotFoundError()
+
+
+class TimberLoggingResource(resource.Resource):
+    """
+    Timber Logging Resource
+    """
+
+    def render_GET(self, request):
+        """
+        Receive GET request on the logging api. Just tell em they've arrived.
+        """
+        debug("received GET request on logging resource")
+        description = "Welcome to the Timber REST API. Use POST to log data."
+        description += "JSON Format:{'level': INTEGER,'message': STRING,"
+        description += "'type': STRING}"
+        return description
+
+    def render_POST(self, request):
+        """
+        Receive POST request on the logger. This is the main logging api.
+
+        JSON Format:
+        {
+            'level': INTEGER
+            'message': STRING
+            'type': STRING
+        }
+        
+        """
+        requestDict = request.__dict__
+        requestArgs = request.args
+        #content = request.content.getvalue() ? not sure if this is right.
+        rawcontent = request.content.read()
+        content = json.loads(rawcontent)
+        debug("received content:" + content)
+        try:
+            logMessage = content['message']
+            logLevel = content['level']
+            logType = content['type']
+            msg = message.ExternalLogMessage(logMessage, logLevel, logType)
+            logger.logMessage(msg)
+        except:
+            debug('Problem logging', error=True)
+            return "There was a problem logging the message"
+        return "Message Logged!"
+
+
+class TimberStatsResource(resource.Resource):
+    """
+    Resource for getting server stats.
+    """
+
+    def render_GET(self, request):
+        """
+        Get statistics for this node and the system
+        """
+        debug("Recevied GET on stat resouce")
+        requestDict = request.__dict__
+        requestArgs = request.args
+        rawcontent = request.content.read()
+        content = json.loads(rawcontent)
+        try:
+            name = content['stat']
+            toReturn = aggregation.getAggregation(name)
+            return json.dumps(toReturn)
+            debug("Sent back stat " + name, success=True)
+        except Exception as e:
+            debug(e)
+            debug("Could not return stat", error=True)
+            return "Error. Sorry."
+
+    def render_POST(self, request):
+        """
+        Post data to statistics. Not currently supported.
+        """
+        debug("Invalid stats POST access", info=True)
+        return "Sorry, POST access not provided"
+
 
 class PageNotFoundError(resource.Resource):
     """
@@ -135,112 +178,48 @@ class PageNotFoundError(resource.Resource):
     """
 
     def render_GET(self, request):
+        """
+        Render page not found for GET requests
+        """
+        debug("404 error")
         return '404 Error: Not Found.'
 
+    def render_POST(self, request):
+        """
+        Render page not found for POST requests
+        """
+        debug("POST to page not found? wtf.")
+        return '404 Error: Not found.'
 
+### Globals ##################################################################
 
-class TimberProtocol(protocol.Protocol):
-    """
-    Timber service
-    """
-
-    implements(ITimberProtocol)
-
-    def __init__(self, factory):
-        self.factory = factory
-
-    def connectionMade(self):
-        self.transport.loseConnection()
-        self.factory.numProtocols = self.factory.numProtocols+1 
-        #self.transport.write(
-        #"Welcome! There are currently %d open connections.
-        #\n" % (self.factory.numProtocols,))
-
-    def connectionLost(self, reason):
-        self.factory.numProtocols = self.factory.numProtocols-1
-
-    def dataReceived(self, data):
-        pass
-        #self.transport.write(data)
-
-
-
-class TimberProtocolFactory(protocol.ServerFactory):
-    """
-    Factory for giving back a Timber service
-    """
-
-    implements(ITimberProtocolFactory)
-
-    protocol = TimberProtocol
-
-    def __init__(self, fileName):
-        self.file = fileName
-
-    def buildProtocol(self, addr):
-        return Timber()
-
-    def startFactory(self):
-        self.fp = open(self.file, 'a')
-
-    def stopFactory(self):
-        self.fp.close()
-
-'''
-class TimberService(service.Service):
-
-    implements(ITimberService)
-
-class TimberServiceFactory(service.ServiceFactory):
-
-    implements(ITimberServiceFactory)
-'''
+APIS = {
+    'logger': TimberLoggingResource(),
+    'stats': TimberStatsResource(),
+    }
 
 ### Main #####################################################################
-if __name__ == '__main__':
-    options = parse_args()
 
-    # this variable has to be named 'application'
-    application = service.Application("timber")
+def timberSimpleRun():
+    """
+    Run the Timber API on the reactor.
+    """
+    root = TimberRootResource()
+    root.putChild("logger", TimberLoggingResource())
+    root.putChild("stats", TimberStatsResource())
 
-    # this hooks the collection we made to the application
-    #serviceCollection.setServiceParent(application)
+    timber_factory = server.Site(root)
+
+    debug("Launching Timber listener on port " \
+        + str(config.LOG_PORT) + ".", info=True)
+    
+    reactor.listenTCP(config.LOG_PORT, timber_factory)
 
 
-    '''application = service.Application('finger', uid=1, gid=1)
-    factory = TimberFactory(moshez='Happy and well')
-    internet.TCPServer(79, factory).setServiceParent(
-        service.IServiceCollection(application))
-    '''
-
-    '''endpoint = TCP4ServerEndpoint(reactor, 8007)
-    endpoint.listen(TimberFactory())
-    reactor.run()'''
-
-    # configuration parameters
-    port = 10000
-    iface = 'localhost'
-    fileparam = 'aasdf.txt'
-
-    root = resource.Resource()
-    root.putChild("logger", TimberResource())
-
-    #serviceCollection = service.MultiService()
-
-    #timber_service = TimberService(fileparam)
-    #timber_service.setServiceParent(serviceCollection)
-
-    # the tcp service connects the factory to a listening socket. it will
-    # create the listening socket when it is started
-    #timber_factory = TimberFactory(timber_service)
-
-    """    log_service = internet.TCPServer(
-        config.DEFAULT_LOG_PORT, timber_factory, interface=iface)
-    log_service.setServiceParent(serviceCollection)"""
-
-    """    gossip_service = internet.TCPServer(
-        config.DEFAULT_RECEIVE_PORT, factory, interface=iface)
-    gossip_service.setServiceParent(serviceCollection)"""
-
-    log_server = TCPServer(config.DEFAULT_LOG_PORT, Site(root))
-    log_server.setServiceParent(application)
+if __name__ == "__main__":
+    """
+    This allows one to run the Timber API without running other services
+    (like gossip) for testing.
+    """
+    timberSimpleRun()
+    reactor.run()
