@@ -1,3 +1,0 @@
-Every Gossip clock
-	Send a vectorclock message
-	Send an aggregate message

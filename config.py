@@ -21,7 +21,7 @@ IPV6 = False
 Whether to use IP version 6. turn off for now.
 """
 
-DEFAULT_SEND_PORT = 30480
+DEFAULT_SEND_PORT = 30581
 DEFAULT_RECEIVE_PORT = 30481
 DEFAULT_LOG_PORT = 8080
 """

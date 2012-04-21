@@ -19,6 +19,7 @@ import uuid
 import random
 import sys
 import traceback
+import math
 
 # External Library Imports
 import twisted.internet.tcp
@@ -188,11 +189,12 @@ def maintainMembers():
     group_membership.membersRefresh()
 
     # Add in new nodes.
-    for member in group_membership.getCurrentMemberSet():
-        if member.getUid() not in universe:
-            if not getMe().__eq__(member):
-                universe[member.getUid()] = member
-                possibledead.remove(member.getUid())
+    tempUniverse = group_membership.getCurrentMemberDict()
+    for uid in tempUniverse:
+        if uid not in universe and not getMe().__eq__(tempUniverse[uid]):
+            universe[uid] = tempUniverse[uid]
+        if uid in possibledead:
+            possibledead.remove(uid)
 
     # Remove dead nodes
     for dead in possibledead:
@@ -238,11 +240,15 @@ def getNeighbors():
     """
     return neighbors
 
-def getRandomNeighbors(count=5):
+def getRandomNeighbors(count=None):
     """
     Return a random set of neighbors.
     """
-    return random.sample(universe.keys(), count)
+    if not count:
+        count = max(2, int(math.ceil(math.log10(len(universe)))))
+    samplespace = universe.keys()
+    samplespace.remove(getMe().getUid())
+    return random.sample(samplespace, count)
 
 
 def connectToNeighbors():
@@ -332,4 +338,5 @@ def globalReset():
         deadNode(uid)
     universe = {}
     neighbors = {}
+    simpledb.deleteAll("members")
     init()

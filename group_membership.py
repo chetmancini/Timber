@@ -25,12 +25,27 @@ import connections
 import nodes
 from debug import debug
 
+### Variables ################################################################
+members = {}
+members_to_delete = set([])
+
+### Constants ################################################################
+ITEMKEY = "members"
+#ATTRIBUTENAME = "members_list"
+#GLUE = "&&&"
+
 ### Functions ################################################################
-def getRandomWaitTime():
+def getRandomWaitTimeMillis():
     """
     Generate a random wait time between member refresh operations.
     """
     return random.randint(20000, 60000)
+
+def getRandomWaitTimeSecs():
+    """
+    Generate a random wai ttime between member refresh ops
+    """
+    return random.randint(15, 40)
 
 def getPersistedString():
     """
@@ -38,43 +53,44 @@ def getPersistedString():
     """
     return simpledb.getAttribute(ITEMKEY, ATTRIBUTENAME)
 
-def getCurrentMemberSet():
+def getCurrentMemberDict():
     """
     Get the local member set.
     """
     return members
 
-### Variables ################################################################
-members = set([])
-refreshWaitTime = getRandomWaitTime()
-
-### Constants ################################################################
-ITEMKEY = "members"
-ATTRIBUTENAME = "members_list"
-GLUE = "&&&"
 ### Functions ################################################################
 def membersRefresh():
     """
     Run members refresh operation
     """
     global members
-    global refreshWaitTime
 
     try:
+        for key in members:
+            members_to_delete.add(key)
         members.clear()
-        joined = simpledb.getAttribute(ITEMKEY, ATTRIBUTENAME)
-        if (joined != None) and (len(joined) > 0):
-            newmembers = joined.split(GLUE)
-            for member in newmembers:
-                if len(member) > 6:
-                    memberNode = nodes.buildNode(member)
-                    if connections.getMe().getUid == memberNode.getUid():
+
+        newMembersDict = simpledb.getSet(ITEMKEY)
+        if (newMembersDict != None) and (len(newMembersDict) > 0):
+            #newmembers = joined.split(GLUE)
+            for memberUid in newMembersDict:
+                if len(memberUid) > 6:
+                    memberNode = nodes.buildNode(newMembersDict[memberUid])
+                    if not connections.getMe().__eq__(memberNode):
                         result = True #Really should send a noop.
                         if result:
-                            members.add(memberNode)
+                            members[memberNode.getUid()] = memberNode
                         else:
                             debug("Noop failed. Node removed.", info=True)
-        members.add(connections.getMe().getBaseData())
+                    else:
+                        pass
+        members[connections.getMe().getUid()] = connections.getMe().getBaseData()
+
+        for key in members:
+            if key in members_to_delete:
+                members_to_delete.remove(key)
+
         debug("Members refresh procedure ran.", success=True)
         debug("There are " + str(len(members)) + " members in the system.", 
             info=True)
@@ -90,12 +106,19 @@ def persistSet():
     Persist this member set to SimpleDB
     """
     try:
-        output = ""
+        toWrite = {}
         for member in members:
-            output += member.getCompressed() + GLUE
+            toWrite[member] = members[member].getCompressed()
+        #output = ""
+        #for member in members:
+        #    output += member.getCompressed() + GLUE
         debug("String to persist built", info=True)
-        simpledb.putAttribute(ITEMKEY, ATTRIBUTENAME, output)
+        simpledb.putSet(ITEMKEY, toWrite)
+        if len(members_to_delete) > 0:
+            simpledb.deleteSet(ITEMKEY, members_to_delete)
+            debug("DELETing members", info=True)
         debug("Member set persisted correctly", success=True)
+
     except:
         traceback.print_exc(file=sys.stdout)
         debug("Persist set failed", error=True)

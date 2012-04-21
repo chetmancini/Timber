@@ -14,6 +14,7 @@ Dependencies
     - kombu (talking to RabbitMQ)
     - boto (for Amazon Web Services)
     - psutil (for server statistics)
+    - networkx (for visualization)
 
 ### Potential Python Packages:
     - txAWS (for AWS)

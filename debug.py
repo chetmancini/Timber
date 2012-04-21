@@ -50,7 +50,8 @@ def printMessage(msg):
     """
     Print a message to standard out
     """
-    print >>sys.stdout, str(msg)
+    print str(msg)
+    #print >>sys.stdout, str(msg)
 
 def logMessage(msg):
     """

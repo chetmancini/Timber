@@ -21,7 +21,6 @@ import boto
 # Local Imports
 import config
 from timber_exceptions import GeneralError
-from debug import debug
 
 ### Variables ################################################################
 sdbConnection = None
@@ -40,11 +39,10 @@ def sdbConnect():
                 config.AWS_ACCESS_KEY,
                 config.AWS_SECRET_KEY)
             if sdbConnection:
-                debug("Connection to SimpleDB established", success=True)
-
+                #debug("Connection to SimpleDB established", success=True)
+                print "SimpleDB connection established"
         except Exception as e:
-            debug(e)
-            debug("Failed to connect to SimplDB", error=True)
+            print e
             raise
     else:
         return
@@ -61,47 +59,59 @@ def initDomain():
     if not sdbDomain:
         try:
             sdbDomain = sdbConnection.create_domain(config.AWS_SDB_DOMAIN_NAME)
-            debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + " created", 
-                success=True)
+            #debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + " created", 
+            #    success=True)
+            print "Domain created!"
 
         except Exception as e:
-            debug(e)
-            debug("Could not create domain on SimpleDB.", error=True)
+            print e
             raise
     else:
         return
 
-def putAttribute(item, name, value):
+def putSet(item, inputDict):
+    #def putAttribute(item, name, value):
     """
     Push a particular value for item and name, overwriting the old value.
     """
-    global sdbConnection
-    global domainExists
-
     sdbConnect()
     initDomain()
 
     try:
-        sdbDomain.put_attributes(item, {name:value}, True)
+        if len(inputDict) > 0:
+            sdbDomain.put_attributes(item, inputDict, replace=True)
+        else:
+            #debug("NO INPUT", error=True)
+            print "NO INPUT"
     except Exception as e:
-        debug("Failed to PUT item in SimpleDB", error=True)
-        debug(e)
+        print e
         raise
 
-def getAttribute(item, name):
+def getSet(item):
+    #def getAttribute(item, name):
     """
     Get a particular value for an item and name.
     """
-    global sdbConnection
-
     sdbConnect()
     initDomain()
 
     try:
-        return sdbDomain.get_attributes(item, name)[name]
+        return sdbDomain.get_attributes(item, consistent_read=True)
     except Exception as e:
-        debug("Failed to GET item from SimpleDB", error=True)
-        debug(e)
+        print e
+        raise
+
+def deleteSet(item, keys=None):
+    """
+    Remove keys
+    """
+    sdbConnect()
+    initDomain()
+
+    try:
+        sdbDomain.delete_attributes(item, keys)
+    except Exception as e:
+        print e
         raise
 
 def destroyDomain():
@@ -109,6 +119,7 @@ def destroyDomain():
     Delete the domain. Warning, deletes all items as well!
     """
     global sdbConnection
+    global sdbDomain
 
     sdbConnect()
 
@@ -117,6 +128,8 @@ def destroyDomain():
         sdbDomain = None
         return
     except Exception as e:
-        debug("Could not delete domain from SimpleDB", error=True)
-        debug(e)
+        print e
         raise
+
+def deleteAll(item):
+    deleteSet(item)

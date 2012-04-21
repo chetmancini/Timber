@@ -138,7 +138,7 @@ class GossipServerFactory(ServerFactory):
         """
         # We want to run members refresh every once in awhile
         self.membersLoop = task.LoopingCall(connections.maintainMembers)
-        self.membersLoop.start(config.MEMBERS_REFRESH_INTERVAL, True)
+        self.membersLoop.start(group_membership.getRandomWaitTimeSecs(), False)
 
         # Run gossip on a timer.
         self.gossipLoop = task.LoopingCall(self.gossip)
@@ -257,7 +257,7 @@ class GossipClientFactory(ReconnectingClientFactory):
 def gossipRun():
 
     debug("Launching Hiss Listener on port " + \
-        config.RECEIVE_PORT + ".", info=True)
+        str(config.RECEIVE_PORT) + ".", info=True)
 
     gossipServerFactory = GossipServerFactory()
     reactor.listenTCP(config.RECEIVE_PORT, gossipServerFactory)
