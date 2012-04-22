@@ -39,6 +39,7 @@ def printError(msg):
     Print a message to standard error.
     """
     print >>sys.stderr, str(msg)
+    sys.stderr.flush()
 
 def logError(msg):
     """
@@ -50,8 +51,8 @@ def printMessage(msg):
     """
     Print a message to standard out
     """
-    print str(msg)
-    #print >>sys.stdout, str(msg)
+    print >>sys.stdout, str(msg)
+    sys.stdout.flush()
 
 def logMessage(msg):
     """
@@ -82,20 +83,20 @@ def debug(
     if type(msg) is str:
         if DEBUG_FLG and threshold >= THRESHOLD:
             if error:
-                printError("! ERROR:\t" + uidstr + msg)
+                printError("! ERROR:  \t" + uidstr + msg)
             elif success:
                 printMessage("* SUCCESS:\t" + uidstr + msg)
             elif info:
-                printMessage("- INFO:\t\t" + uidstr + msg)
+                printMessage("- INFO:   \t" + uidstr + msg)
             elif strange:
-                printMessage("? STRANGE\t" + uidstr + msg)
+                printMessage("? STRANGE:\t" + uidstr + msg)
             else:
                 printMessage(msg)
         else:
             if error and threshold >= THRESHOLD:
-                printError("! ERROR:\t" + uidstr + msg)
+                printError("! ERROR:  \t" + uidstr + msg)
     else:
-        print "! ERROR", msg
+        print "! ERROR:  ", msg
         traceback.print_exc(file=sys.stderr)
 
 def countLinesOfCode():

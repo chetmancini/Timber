@@ -24,7 +24,7 @@ import math
 # External Library Imports
 import twisted.internet.tcp
 import twisted.internet.interfaces
-from zope.interface import Interface, implements
+import zope.interface
 
 # Local Imports
 import config
@@ -43,7 +43,7 @@ class HissConnection(object):
     use composition instead of inheritence.
     """
 
-    implements(twisted.internet.interfaces.ITCPTransport)
+    zope.interface.implements(twisted.internet.interfaces.ITCPTransport)
     """
     Implements all the TCPTransport methods.
     """
@@ -167,10 +167,18 @@ UIDs known to be dead.
 ### Functions ################################################################
 
 def init():
+    """
+    Initialize the connections.
+    Let's get it started...in here!
+    """
     me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
 
 def maintainMembers():
+    """
+    use the membersrefresh operation to maintain
+    the universe of known nodes.
+    """
     debug("Running maintain members.", info=True)
 
     possibledead = set(universe.keys())
@@ -180,7 +188,7 @@ def maintainMembers():
     # Add in new nodes.
     tempUniverse = group_membership.getCurrentMemberDict()
     for uid in tempUniverse:
-        if uid not in universe and not getMe().__eq__(tempUniverse[uid]):
+        if uid not in universe and not me.getMe().__eq__(tempUniverse[uid]):
             universe[uid] = tempUniverse[uid]
         if uid in possibledead:
             possibledead.remove(uid)
@@ -227,7 +235,7 @@ def getNeighbors():
     with the nearest nodes. Definitely an area for further design and 
     implementation.
     """
-    return neighbors
+    return getRandomNeighbors()
 
 def getRandomNeighbors(count=None):
     """
@@ -236,7 +244,7 @@ def getRandomNeighbors(count=None):
     if not count:
         count = max(2, int(math.ceil(math.log10(len(universe)))))
     samplespace = universe.keys()
-    samplespace.remove(getMe().getUid())
+    samplespace.remove(me.getMe().getUid())
     return random.sample(samplespace, count)
 
 
@@ -315,7 +323,7 @@ def createVectorClockMessage():
     """
     Create a new vector clock message
     """
-    return getMe().getVectorClock().createMessage()
+    return me.getMe().getVectorClock().createMessage()
 
 def globalReset():
     """

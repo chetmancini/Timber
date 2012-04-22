@@ -21,6 +21,7 @@ import boto
 # Local Imports
 import config
 from timber_exceptions import GeneralError
+from debug import debug
 
 ### Variables ################################################################
 sdbConnection = None
@@ -39,8 +40,7 @@ def sdbConnect():
                 config.AWS_ACCESS_KEY,
                 config.AWS_SECRET_KEY)
             if sdbConnection:
-                #debug("Connection to SimpleDB established", success=True)
-                print "SimpleDB connection established"
+                debug("Connection to SimpleDB established", success=True)
         except Exception as e:
             print e
             raise
@@ -59,18 +59,15 @@ def initDomain():
     if not sdbDomain:
         try:
             sdbDomain = sdbConnection.create_domain(config.AWS_SDB_DOMAIN_NAME)
-            #debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + " created", 
-            #    success=True)
-            print "Domain created!"
-
+            debug("SDB Domain " + config.AWS_SDB_DOMAIN_NAME + " created", 
+                success=True)
         except Exception as e:
-            print e
+            debug(e)
             raise
     else:
         return
 
 def putSet(item, inputDict):
-    #def putAttribute(item, name, value):
     """
     Push a particular value for item and name, overwriting the old value.
     """
@@ -81,14 +78,12 @@ def putSet(item, inputDict):
         if len(inputDict) > 0:
             sdbDomain.put_attributes(item, inputDict, replace=True)
         else:
-            #debug("NO INPUT", error=True)
-            print "NO INPUT"
+            debug("NO INPUT", error=True)
     except Exception as e:
-        print e
+        debug(e)
         raise
 
 def getSet(item):
-    #def getAttribute(item, name):
     """
     Get a particular value for an item and name.
     """
@@ -98,7 +93,7 @@ def getSet(item):
     try:
         return sdbDomain.get_attributes(item, consistent_read=True)
     except Exception as e:
-        print e
+        debug(e)
         raise
 
 def deleteSet(item, keys=None):
@@ -111,7 +106,7 @@ def deleteSet(item, keys=None):
     try:
         sdbDomain.delete_attributes(item, keys)
     except Exception as e:
-        print e
+        debug(e)
         raise
 
 def destroyDomain():
@@ -128,7 +123,7 @@ def destroyDomain():
         sdbDomain = None
         return
     except Exception as e:
-        print e
+        debug(e)
         raise
 
 def deleteAll(item):
