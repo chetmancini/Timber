@@ -200,7 +200,7 @@ APIS = {
 
 ### Main #####################################################################
 
-def timberSimpleRun():
+def timberRun():
     """
     Run the Timber API on the reactor.
     """
@@ -221,5 +221,5 @@ if __name__ == "__main__":
     This allows one to run the Timber API without running other services
     (like gossip) for testing.
     """
-    timberSimpleRun()
+    timberRun()
     reactor.run()

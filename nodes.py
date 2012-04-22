@@ -146,6 +146,9 @@ class BaseNode(object):
         return cPickle.dumps(self)
 
     def getBaseData(self):
+        """
+        Just get the basenode type data (compressed form)
+        """
         toReturn = BaseNode(self._ip)
         toReturn._uid = self._uid
         toReturn._port = self._port
@@ -183,24 +186,31 @@ class ExternalNode(BaseNode):
         self._tcpConnection = None
         self._knownAlive = True
 
-    def openTCPConnection(self):
+    def openTCPConnection(self, bindAddress=None, connector=None):
         """
         Open a new TCP connection from the local node to this node.
         """
         debug("Opening a new connection", info=True)
-        ### TODO
-        connections.HissTCPClientConnection.fromPrimitives(
+        connections.openConnection(self.getIp(), self.getPort())
+        '''
+        if not bindAddress:
+            bindAddress = config.getNextSendPort()
+        c = connections.HissTCPClientConnection.fromPrimitives(
             self,
-            self.getIp())
-        pass
+            self.getIp(), 
+            self.getPort(), 
+            bindAddress,
+            connector)
+        self._tcpConnection = c
+        '''
 
-    def setTCPConnection(self, tcpConnection):
+    def setTCPConnection(self, tcpConn):
         """
         Assign a TCP connection to this node.
         """
         debug("Setting Connection", info=True)
         self._tcpConnection = connections.HissTCPClientConnection(
-            self, tcpConnection)
+            self, tcpConn)
 
     def getTCPConnection(self):
         """
@@ -214,7 +224,7 @@ class ExternalNode(BaseNode):
         """
         Return if a TCP Connection to this node exists.
         """
-        return (self.tcpConnection is not None)
+        return (self._tcpConnection is not None)
 
     def destroyTCPConnection(self):
         """
@@ -224,6 +234,14 @@ class ExternalNode(BaseNode):
         if self.hasTCPConnection():
             self.getTCPConnection().loseConnection()
         self._tcpConnection = None
+
+    @staticmethod
+    def fromBase(basenode):
+        """
+        Factory method.
+        """
+        return ExternalNode(basenode._ip, basenode._port, basenode._uid)
+
 
 
 class CurrentNode(BaseNode):

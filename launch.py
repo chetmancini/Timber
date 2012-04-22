@@ -23,7 +23,7 @@ from twisted.internet import reactor
 
 # Local Imports
 import aggregation
-import timber_simple
+import timber
 import gossip
 import config
 import connections
@@ -83,7 +83,7 @@ def parse_args():
 
     parser.add_argument('--version', 
         action='version', 
-        version=timber_simple.__version__,
+        version=timber.__version__,
         help='Report system version.')
 
     parser.add_argument('--hissoff', 
@@ -120,7 +120,7 @@ def main():
     aggregation.stats_init()
 
     if not args.timberoff:
-        timber_simple.timberSimpleRun()
+        timber.timberRun()
 
     if not args.hissoff:
         gossip.gossipRun()

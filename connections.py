@@ -29,6 +29,7 @@ import zope.interface
 # Local Imports
 import config
 import me
+import gossip
 import message
 import nodes
 import group_membership
@@ -170,6 +171,8 @@ def init():
     """
     Initialize the connections.
     Let's get it started...in here!
+    Developer note: the advantage of putting it here is
+    that me.py doesn't need to import anything.
     """
     me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
@@ -179,6 +182,7 @@ def maintainMembers():
     use the membersrefresh operation to maintain
     the universe of known nodes.
     """
+    global universe
     debug("Running maintain members.", info=True)
 
     possibledead = set(universe.keys())
@@ -189,13 +193,18 @@ def maintainMembers():
     tempUniverse = group_membership.getCurrentMemberDict()
     for uid in tempUniverse:
         if uid not in universe and not me.getMe().__eq__(tempUniverse[uid]):
-            universe[uid] = tempUniverse[uid]
+            universe[uid] = nodes.ExternalNode.fromBase(tempUniverse[uid])
         if uid in possibledead:
             possibledead.remove(uid)
 
     # Remove dead nodes
     for dead in possibledead:
         deadNode(dead)
+
+    # should I add me in here? not sure.
+    universe[me.getMe().getUid()] = me.getMe()
+
+    debug("has a universe of size: " + str(len(universe)), info=True)
 
 def lookupNode(uid):
     """
@@ -235,17 +244,30 @@ def getNeighbors():
     with the nearest nodes. Definitely an area for further design and 
     implementation.
     """
-    return getRandomNeighbors()
+    global neighbors
+    if len(neighbors) == 0:
+        neighbors = set(getRandomNeighbors())
+        if len(neighbors) > 0:
+            debug("There are now " + str(len(neighbors)) + "neighbors.", 
+                info=True)
+    return neighbors
+
 
 def getRandomNeighbors(count=None):
     """
-    Return a random set of neighbors.
+    Return a random list of neighbors.
     """
-    if not count:
-        count = max(2, int(math.ceil(math.log10(len(universe)))))
-    samplespace = universe.keys()
-    samplespace.remove(me.getMe().getUid())
-    return random.sample(samplespace, count)
+    if len(universe) > 2:
+        if not count:
+            idealcount = int(math.ceil(math.log10(len(universe))))
+            count = max(2, idealcount)
+        samplespace = universe.keys()
+        if me.getMe().getUid() in samplespace:
+            samplespace.remove(me.getMe().getUid())
+        toReturn = random.sample(samplespace, count)
+        return set(toReturn)
+    else:
+        return set([])
 
 
 def connectToNeighbors():
@@ -253,18 +275,25 @@ def connectToNeighbors():
     Make sure there's a client connection to all our neighbors
     """
     for uid in getNeighbors():
-        externalnode = connections.lookupNode(uid)
+        externalnode = lookupNode(uid)
         if not externalnode.hasTCPConnection():
             debug("opening a client connection", info=True)
             externalnode.openTCPConnection()
         else:
             pass #all good.
 
-def connectionMade(client):
+def openConnection(host, port):
+    """
+    Open a connection. Passthru to gossip
+    """
+    pass
+    gossip.gossipClientConnect(host, port)
+
+def clientConnectionMade(client):
     """
     Called when a connection is made. Not sure how to use this yet.
     """
-    debug("Connection has been made?", info=True)
+    debug("connections.py: Connection has been made?", info=True)
     pass
 
     """def createNode(uid, ip, port):
@@ -272,6 +301,16 @@ def connectionMade(client):
     addNode(create)
     knownalive.add(uid)
     return create"""
+
+def clientConnectionLost((host, port)):
+    """
+    Called when a connection is lost. Not sure how to use this yet.
+    """
+    debug("connections.py: Connection has been lost?", info=True)
+
+    """
+    Remove the connection from the node.
+    """
 
 def deadNode(uid):
     """
@@ -287,7 +326,7 @@ def deadNode(uid):
         knownDead.add(uid)
     debug("removing dead node uid:" + uid, info=True)
 
-def foundClient(transport):
+def foundClientAsServer(transport):
     """
     When a TCP Connection is created.
     """
@@ -295,8 +334,8 @@ def foundClient(transport):
 
     ip = transport.getPeer().host
     for node in universe.values():
-        if item.getIp() == ip:
-            item.setTCPConnection(transport)
+        if node.getIp() == ip:
+            node.setTCPConnection(transport)
             debug("set transport to" + ip, success=True)
             return True
 
@@ -304,7 +343,7 @@ def foundClient(transport):
     debug("Node " + ip + "does not exist yet. Creating it", info=True)
     return False
 
-def lostClient(transport):
+def lostClientAsServer(transport):
     """
     When a TCP Connection is lost.
     """
@@ -312,8 +351,8 @@ def lostClient(transport):
 
     ip = transport.getPeer().host
     for node in universe.values():
-        if item.getIp() == ip:
-            item.destroyTCPConnection()
+        if node.getIp() == ip:
+            node.destroyTCPConnection()
             debug("Lost connection with " + ip, info=True)
             return True
     debug("Could not find connection with " + ip + " to lose", info=True)

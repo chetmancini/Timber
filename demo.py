@@ -33,7 +33,6 @@ except ImportError:
 # Local Imports
 import config
 import simpledb
-import asyncproc
 
 ### Constants ################################################################
 
@@ -130,6 +129,10 @@ def handleLine(line, header=False):
     isError = line[0] == "!"
 
     array = line.split("\t")
+
+    if len(array) < 3:
+        print line
+        return
 
     if isSuccess:
         #array[0] = chetcolors.GREENBG + array[0] + chetcolors.DEFAULTBG

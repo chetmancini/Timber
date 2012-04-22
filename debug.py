@@ -133,7 +133,6 @@ if __name__ == "__main__":
     import messagequeue
     import group_membership
     import simpledb
-    import timber_simple
     import timber
     import stats
     import connections
