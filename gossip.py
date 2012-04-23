@@ -152,7 +152,7 @@ class GossipClientProtocol(Protocol):
                 msg = message.buildMessage(data)
                 msg.respond()
             except:
-                debug("data:" + data, error=True)
+                debug("data: " + data, error=True)
 
 
 class GossipServerFactory(ServerFactory):
@@ -266,7 +266,7 @@ class GossipClientFactory(ReconnectingClientFactory):
         Gossip procedure. This is basic. Hope to improve later.
         """
         if connections.connectToNeighbors():
-            debug("connections in process. deferred gossip", info=True)
+            debug("Connections in process. deferred gossip", info=True)
             return
 
         # Get my neighbors
@@ -302,7 +302,7 @@ class GossipClientFactory(ReconnectingClientFactory):
         agg = random.choice(aggregation.STATISTICS.values())      
         aggMessage = message.AggregateMessage.createAggregateMessage(agg)
         aggMessage.setRecipients(recipients)
-        gossipMessages.append(aggMessage)  
+        gossipMessages.append(aggMessage)
 
         # Get a network message
         gossipmsg = gossipPrepare()
@@ -323,8 +323,6 @@ class GossipClientFactory(ReconnectingClientFactory):
                 debug(ce.__str__(), error=True)
             except GeneralError as ge:
                 debug(ge.__str__(), error=True)
-
-
 
 
 ### Factories ################################################################
@@ -372,7 +370,7 @@ def gossipPrepare():
     Get the next Message object to gossip to friends
     """
     if not gossipqueue.empty():
-        return gossipqueue.get()
+        return gossipqueue.get_nowait()
     else:
         return None
 

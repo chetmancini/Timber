@@ -244,7 +244,8 @@ class VectorMessage(GenericMessage):
         """
         try:
             me.getMe().getVectorClock().receiveMessage(self)
-            debug("Responded to vector message.", info=True)
+            debug("Responded to vector message.", 
+                info=True, threshold=2)
         except Exception as e:
             debug(e)
 
@@ -303,7 +304,8 @@ class IsAliveMessage(NetworkStatusMessage):
         """
         Response to IsAliveMessage
         """
-        debug('respnding to an isalive message with a memessage', info=True)
+        debug('Respnding to an IsAliveMessage with a MeMessage', 
+            info=True)
         try:
             responseMsg = MeMessage(
                 me.getMe().getUid(), 
@@ -328,7 +330,7 @@ class MeMessage(NetworkStatusMessage):
         """
         super(MeMessage, self).__init__("", sender, recipients)
         self._code = 'M'
-        self._payload = (me.getMe()).getSerialized()
+        self._payload = me.getMe().getCompressed()
 
     def respond(self):
         """
@@ -337,14 +339,11 @@ class MeMessage(NetworkStatusMessage):
         try:
             nodeData = node.buildNode(self._payload)
             if nodeData.getUid() not in connections.universe:
-                connections.universe[nodeData.getUid()] = nodes.ExternalNode(
-                    nodeData.getIp(), 
-                    config.DEFAULT_SEND_PORT, 
-                    nodeData.getUid())
+                connections.universe[nodeData.getUid()] = nodes.ExternalNode.fromBase(nodeData)
             connections.universe[nodeData.getUid()].knownAlive = True
-            debug('reponded to a MeMessage', success=True)
+            debug('Reponded to a MeMessage', success=True)
         except:
-            debug('failed to respond to MeMessage', error=True)
+            debug('Failed to respond to MeMessage', error=True)
 
     @staticmethod
     def isMeMessage(msg):
@@ -490,7 +489,8 @@ class AggregateMessage(GossipNetworkStatusMessage):
         try:
             aggstat = self.getPayload()
             aggregation.STATISTICS[aggstat.getName()].reduce(aggstat)
-            debug("Responded to AggregateMessage", success=True)
+            debug("Responded to AggregateMessage: " + aggstat.getName(), 
+                success=True)
         except:
             debug("Did not respond to aggregation message.", error=True)
 

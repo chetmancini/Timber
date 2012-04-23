@@ -58,12 +58,23 @@ class HissConnection(object):
         self._parentNode = parentNode
 
     @classmethod
-    def fromPrimitives(cls, parentNode, host, port, bindAddress, connector):
+    def fromPrimitives(
+        cls, 
+        parentNode, 
+        host, 
+        port, 
+        bindAddress, 
+        connector, 
+        reactor=None):
         """
         Initialize HissTCPConnection from client.
         """
-        client = twisted.internet.tcp.Client(
-            host, port, bindAddress, connector, twisted.internet.reactor)
+        if not reactor:
+            client = twisted.internet.tcp.Client(
+                host, port, bindAddress, connector, twisted.internet.reactor)
+        else:
+            client = twisted.internet.tcp.Client(
+                host, port, bindAddress, connector, reactor)
         return cls(parentNode, client)
 
     def loseWriteConnection():
@@ -345,10 +356,12 @@ def deadNode(uid):
 def foundClientAsServer(transport):
     """
     When a TCP Connection is created.
+    Would work well on external nodes, but since EVERYTHING
+    has same IP we have no way to distinguish.
     """
-    #global universe
 
     """
+    global universe
     ip = transport.getPeer().host
     for node in universe.values():
         if node.getIp() == ip:
@@ -365,6 +378,7 @@ def lostClientAsServer(transport):
     """
     When a TCP Connection is lost.
     """
+    """
     global universe
 
     ip = transport.getPeer().host
@@ -374,6 +388,7 @@ def lostClientAsServer(transport):
             debug("Lost connection with " + ip, info=True)
             return True
     debug("Could not find connection with " + ip + " to lose", info=True)
+    """
     return False
 
 def createVectorClockMessage():
@@ -381,6 +396,12 @@ def createVectorClockMessage():
     Create a new vector clock message
     """
     return me.getMe().getVectorClock().createMessage()
+
+def localReset():
+    """
+    Kill off this node.
+    """
+    pass
 
 def globalReset():
     """
