@@ -24,6 +24,7 @@ import math
 # External Library Imports
 import twisted.internet.tcp
 import twisted.internet.interfaces
+import twisted.internet.reactor
 import zope.interface
 
 # Local Imports
@@ -62,7 +63,7 @@ class HissConnection(object):
         Initialize HissTCPConnection from client.
         """
         client = twisted.internet.tcp.Client(
-            host, port, bindAddress, connector)
+            host, port, bindAddress, connector, twisted.internet.reactor)
         return cls(parentNode, client)
 
     def loseWriteConnection():
@@ -100,7 +101,12 @@ class HissConnection(object):
         """
         wrapper for super.write(). Add some sanity checking and debugging.
         """
-        self.write(msg.getSerialized())
+        try:
+            self._client.write(msg.getSerialized())
+        except:
+            debug("Connection failed to write msg: " + msg.getCode(), 
+                error=True)
+            traceback.print_exc(file=sys.stdout)
 
 
 class HissTCPClientConnection(twisted.internet.tcp.Client):
@@ -121,7 +127,7 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         Initialize HissTCPConnection from client.
         """
         client = twisted.internet.tcp.Client(
-            host, port, bindAddress, connector)
+            host, port, bindAddress, connector, twisted.internet.reactor)
 
         return cls(parentNode, client)
 
@@ -139,7 +145,7 @@ class HissTCPClientConnection(twisted.internet.tcp.Client):
         wrapper for super.write(). Add some sanity checking and debugging.
         """
         try:
-            super.write(msg.getSerialized())
+            self.write(msg.getSerialized())
         except:
             debug("Connection failed to write msg: " + msg.getCode(), 
                 error=True)
@@ -274,26 +280,30 @@ def connectToNeighbors():
     """
     Make sure there's a client connection to all our neighbors
     """
+    madeConnection = False
     for uid in getNeighbors():
         externalnode = lookupNode(uid)
         if not externalnode.hasTCPConnection():
-            debug("opening a client connection", info=True)
+            #debug("opening a client connection", info=True)
             externalnode.openTCPConnection()
+            madeConnection = True
         else:
             pass #all good.
+    return madeConnection
 
 def openConnection(host, port):
     """
-    Open a connection. Passthru to gossip
+    Open a connection. Passthru to gossip. returns connector.
     """
-    pass
-    gossip.gossipClientConnect(host, port)
+    return gossip.gossipClientConnect(host, port)
 
 def clientConnectionMade(client):
     """
     Called when a connection is made. Not sure how to use this yet.
+    Probably can use when on seperate nodes, but unfortunately on a
+    local system we cannot grap IP addresses
     """
-    debug("connections.py: Connection has been made?", info=True)
+    #debug("connections.py: Connection has been made?", info=True)
     pass
 
     """def createNode(uid, ip, port):
@@ -311,6 +321,12 @@ def clientConnectionLost((host, port)):
     """
     Remove the connection from the node.
     """
+
+def assignTransport(uid, transport):
+    try:
+        lookupNode(uid).setTCPConnection(transport)
+    except Exception as e:
+        debug(e)
 
 def deadNode(uid):
     """
@@ -330,17 +346,19 @@ def foundClientAsServer(transport):
     """
     When a TCP Connection is created.
     """
-    global universe
+    #global universe
 
+    """
     ip = transport.getPeer().host
     for node in universe.values():
         if node.getIp() == ip:
             node.setTCPConnection(transport)
             debug("set transport to" + ip, success=True)
             return True
-
+    """
     #### TODO: Create node.
-    debug("Node " + ip + "does not exist yet. Creating it", info=True)
+    #nodes.ExternalNode()
+    #debug("Node " + ip + "does not exist yet. Creating it", info=True)
     return False
 
 def lostClientAsServer(transport):

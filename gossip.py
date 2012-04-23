@@ -21,9 +21,13 @@
 
 ### Imports ##################################################################
 # Python Libary Imports
-import Queue
 import sys
 import traceback
+import random
+try:
+    from Queue import Queue, Empty
+except ImportError: #Hack for Python2to3
+    from queue import Queue, Empty
 
 # External Library Imports
 from zope.interface import Interface, implements
@@ -33,6 +37,7 @@ from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ReconnectingClientFactory
 
 # Local Imports
+import me
 import config
 import connections
 import message
@@ -43,7 +48,7 @@ from debug import debug
 
 ### Globals ##################################################################
 
-gossipqueue = Queue.Queue()
+gossipqueue = Queue()
 
 ### Interfaces ###############################################################
 class IGossipServerProtocol(Interface):
@@ -79,11 +84,19 @@ class GossipServerProtocol(Protocol):
         """
         Callback called once a connection is made with a client.
         """
+        debug("Server protocol connection made!", success=True)
         self.factory.clientConnectionMade(self)
+
+        # Send a response
+        #response = message.MeMessage()
+        #response.send(self.transport)
+        self.transport.write(me.getUid())
 
     def connectionLost(self, reason):
         """
         Callback called when a connection is lost.
+        Pretty much just ignore. client connection losses
+        more important.
         """
         self.factory.clientConnectionLost(self, reason)
 
@@ -91,10 +104,15 @@ class GossipServerProtocol(Protocol):
         """
         When gossip data is received.
         """
-        debug("Raw data received", info=True)
-        msg = message.buildMessage(data)
-
-        msg.respond() # just respond polymorphically.
+        debug("DATA RECEIVED BOOYAH!", success=True)
+        if len(data) == 32:
+            connections.assignTransport(data, self.transport)
+        else:
+            try:
+                msg = message.buildMessage(data)
+                msg.respond() # just respond polymorphically.
+            except:
+                debug(data, error=True)
 
 class GossipClientProtocol(Protocol):
     """
@@ -109,6 +127,11 @@ class GossipClientProtocol(Protocol):
         debug("Client Protocol connection made", success=True)
         connections.clientConnectionMade(self.transport)
 
+        ### Send a message to respond.
+        #response = message.MeMessage()
+        #response.send(self.transport)
+        self.transport.write(me.getUid())
+
     def connectionLost(self):
         """
         Callback when a connection is lost.
@@ -121,9 +144,15 @@ class GossipClientProtocol(Protocol):
         """
         Data received? this seems a little odd.
         """
-        debug("Client protocol data received?", strange=True)
-        msg = message.buildMessage(data)
-        msg.respond()
+        debug("DATA RECEIVED...ON CLIENT?", strange=True)
+        if len(data) == 32:
+            connections.assignTransport(data, self.transport)
+        else:
+            try:
+                msg = message.buildMessage(data)
+                msg.respond()
+            except:
+                debug("data:" + data, error=True)
 
 
 class GossipServerFactory(ServerFactory):
@@ -144,66 +173,9 @@ class GossipServerFactory(ServerFactory):
         """
         # We want to run members refresh every once in awhile
         self.membersLoop = task.LoopingCall(connections.maintainMembers)
-        self.membersLoop.start(group_membership.getRandomWaitTimeSecs(), False)
-
-        # Run gossip on a timer.
-        self.gossipLoop = task.LoopingCall(self.gossip)
-        self.gossipLoop.start(config.GOSSIP_WAIT_SECONDS, False)
+        self.membersLoop.start(group_membership.getRandomWaitTimeSecs(), True)
 
         debug("Gossip Server Factory created!", success=True)
-
-    def gossip(self):
-        """
-        Gossip procedure. This is basic. Hope to improve later.
-        """
-        connections.connectToNeighbors()
-
-        # Get my neighbors
-        recipients = connections.getNeighbors()
-
-        if len(recipients) > 0:
-            debug("I am now gossiping with:")
-            for uid in recipients:
-                externalnode = connections.lookupNode(uid)
-                debug("\t" + uid + "\t" + externalnode.getIp())
-        else:
-            debug("No neighbors to gossip with this interval.", error=True)
-            return
-
-        # Put all messages in a list.
-        gossipMessages = []
-
-        # Get a vector clock message
-        vcMessage = message.VectorMessage.createVectorClockMessage()
-        vcMessage.setRecipients(recipients)
-        gossipMessages.append(vcMessage)
-
-        # Put in each aggreggation
-        for agg in aggregation.STATISTICS:
-            aggMessage = message.AggregateMessage.createAggregateMessage(agg)
-            aggMessage.setRecipients(recipients)
-            gossipMessages.append(aggMessage)
-
-        # Get a network message
-        gossipmsg = gossipPrepare()
-        while gossipmsg:
-            gossipmsg.setRecipients(recipients)
-            toAppend = copy.deepcopy(gossipmsg)
-            gossipMessages.append(toAppend)
-            gossipmsg = gossipPrepare()
-
-        debug("There are " \
-            + str(len(gossipMessages)) + " to send.", threshold=2, info=True)
-
-        # Send out the messages
-        for msg in gossipMessages:
-            try:
-                msg.send()
-                debug("message sent", success=True)
-            except ConnectionError as ce:
-                debug(ce.__str__(), error=True)
-            except GeneralError as ge:
-                debug(ge.__str__(), error=True)
 
 
     def clientConnectionMade(self, client):
@@ -224,6 +196,12 @@ class GossipServerFactory(ServerFactory):
 
         connections.lostClientAsServer(client.transport)
 
+    def startFactory(self):
+        pass
+
+    def stopFactory(self):
+        pass
+
 
 class GossipClientFactory(ReconnectingClientFactory):
     """
@@ -239,6 +217,10 @@ class GossipClientFactory(ReconnectingClientFactory):
         Constructor.
         """
         debug("Client Factory Init", info=True)
+        # Run gossip on a timer.
+        self.gossipLoop = task.LoopingCall(self.gossip)
+        self.gossipLoop.start(config.GOSSIP_WAIT_SECONDS, False)
+
         self.callback = callback
         self.errback = errback
 
@@ -268,15 +250,82 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Called when the factory is started
         """
-        debug("Client Factory Started.", info=True)
+        debug("Client Factory Started...", info=True)
         pass #good for connectiong, opening fiels, etc..
 
     def stopFactory(self):
         """
         Called when the factory is stopped.
         """
-        debug("Client Factory Stopped.", info=True)
+        debug("Client Factory Stopped...", info=True)
         pass #good for disconnectiong databases, closing files.
+
+
+    def gossip(self):
+        """
+        Gossip procedure. This is basic. Hope to improve later.
+        """
+        if connections.connectToNeighbors():
+            debug("connections in process. deferred gossip", info=True)
+            return
+
+        # Get my neighbors
+        recipients = connections.getNeighbors()
+
+        if len(recipients) > 0:
+            debug("I am now gossiping with:", info=True)
+            for uid in recipients:
+                externalnode = connections.lookupNode(uid)
+                debug("-----[ " + externalnode.getShortUid() + " ]" + \
+                    "--" + str(externalnode.getIp()) + ":" + \
+                    str(externalnode.getPort()), info=True)
+        else:
+            debug("No neighbors to gossip with this interval.", error=True)
+            return
+
+        # Put all messages in a list.
+        gossipMessages = []
+
+        # Get a vector clock message
+        vcMessage = message.VectorMessage.createVectorClockMessage()
+        vcMessage.setRecipients(recipients)
+        gossipMessages.append(vcMessage)
+
+        # Put in each aggreggation. Tae out for now.
+        """
+        for aggName in aggregation.STATISTICS:
+            agg = aggregation.STATISTICS[aggName]
+            aggMessage = message.AggregateMessage.createAggregateMessage(agg)
+            aggMessage.setRecipients(recipients)
+            gossipMessages.append(aggMessage)
+        """
+        agg = random.choice(aggregation.STATISTICS.values())      
+        aggMessage = message.AggregateMessage.createAggregateMessage(agg)
+        aggMessage.setRecipients(recipients)
+        gossipMessages.append(aggMessage)  
+
+        # Get a network message
+        gossipmsg = gossipPrepare()
+        while gossipmsg:
+            gossipmsg.setRecipients(recipients)
+            toAppend = copy.deepcopy(gossipmsg)
+            gossipMessages.append(toAppend)
+            gossipmsg = gossipPrepare()
+
+        debug("There are " \
+            + str(len(gossipMessages)) + " to send.", threshold=2, info=True)
+
+        # Send out the messages
+        for msg in gossipMessages:
+            try:
+                msg.send()
+            except ConnectionError as ce:
+                debug(ce.__str__(), error=True)
+            except GeneralError as ge:
+                debug(ge.__str__(), error=True)
+
+
+
 
 ### Factories ################################################################
 gossipServerFactory = None
@@ -285,11 +334,12 @@ gossipClientFactory = None
 ### Functions ################################################################
 def gossipClientConnect(host, port):
     """
-    connect as a client
+    connect as a client. returns a connector
     """
-    reactor.connectTCP(host, port, gossipClientFactory)
+    connector = reactor.connectTCP(host, port, gossipClientFactory)
     debug("Reactor is connecting to " + host + ":" + str(port), 
         info=True)
+    return connector
 
 def gossipRun():
     """

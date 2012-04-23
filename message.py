@@ -146,7 +146,7 @@ class GenericMessage(object):
         """
         return self._time
 
-    def send(self):
+    def send(self, transport=None):
         """
         Send the message. Assume we don't have multicast, 
         so just do point to point for now.
@@ -155,6 +155,13 @@ class GenericMessage(object):
             debug("No recipients specified.", error=True)
             raise GeneralError("No recipients specified.")
 
+        if len(self.getRecipients()) == 1 and transport:
+            node = connections.lookupNode(self.getRecipients()[0])
+            #hissclient = connections.HissTCPClientConnection(transport)
+            hissclient = connections.HissConnection(node, transport)
+            hissclient.dispatchMessage(self)
+
+        recs = []
         for recipient in self.getRecipients():
 
             uid = recipient
@@ -163,20 +170,23 @@ class GenericMessage(object):
                 uid = recipient.getUid()
 
             if uid in connections.universe:
-                node = connections.universe[uid]
+                node = connections.lookupNode(uid)
                 if not node.hasTCPConnection():
                     raise ConnectionError(
-                        "No connection to " + node.getUid())
+                        "No connection to " + node.getShortUid())
                 else:
                     # Ok, stop messing around and send the message!
                     try:
                         tcpConn = node.getTCPConnection().dispatchMessage(self)
-                        debug("Message.py: Message sent.", success=True)
+                        recs.append(node.getShortUid())
                     except:
-                        debug("Failed to send message.", error=True)
+                        debug("Failed to send message to [ " \
+                            + node.getShortUid() + " ]", error=True)
             else:
                 raise GeneralError(
                     "recipient " + uid + " not found.")
+        debug("(" + self.getCode() + ") message sent to [ " \
+            + " ][ ".join(recs) + " ]", success=True)
 
     def getCode(self):
         """
@@ -232,15 +242,18 @@ class VectorMessage(GenericMessage):
         """
         How the systemm should respon to receiving this vector clock message.
         """
-        connections.getMe().getVectorClock().receiveMessage(self)
+        try:
+            me.getMe().getVectorClock().receiveMessage(self)
+            debug("Responded to vector message.", info=True)
+        except Exception as e:
+            debug(e)
 
     @staticmethod
     def createVectorClockMessage():
-        me = me.getMe()
-        if me:
-            return me.getVectorClock().createMessage()
-        else:
-            debug("me is null?")
+        try:
+            return me.getMe().getVectorClock().createMessage()
+        except Exception as e:
+            debug(e)
 
     @staticmethod
     def isVectorMessage(msg):
@@ -486,7 +499,7 @@ class AggregateMessage(GossipNetworkStatusMessage):
         """
         Build an aggregate message for the aggregation in the param.
         """
-        return AggregateMessage(agg, me.getMe().getUid())
+        return AggregateMessage(agg, me.getUid())
 
     @staticmethod
     def isAggregateMessage(msg):

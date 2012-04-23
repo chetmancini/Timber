@@ -45,7 +45,7 @@ def getRandomWaitTimeSecs():
     """
     Generate a random wai ttime between member refresh ops
     """
-    return random.randint(15, 40)
+    return random.randint(30, 60)
 
 def getPersistedString():
     """

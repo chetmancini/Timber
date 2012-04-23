@@ -22,6 +22,7 @@ import time
 import fcntl
 import select
 import random
+import string
 
 try:
     from Queue import Queue, Empty
@@ -142,13 +143,34 @@ def handleLine(line, header=False):
         array[0] = bcolors.FAIL + array[0] + bcolors.ENDC
         array[2] = bcolors.FAIL + array[2] + bcolors.ENDC    
 
-    if array[1] in colordict:
-        color = colordict[array[1]]
+    letterCode = array[1].strip()
+    if letterCode in colordict:
+        color = colordict[letterCode]
     else:
-        colordict[array[1]] = chetcolors.randomBGColor()
-        color = colordict[array[1]]
+        colordict[letterCode] = chetcolors.randomBGColor()
+        color = colordict[letterCode]
     array[1] = color + "  " + array[1] + "  " + chetcolors.DEFAULTBG
 
+    if len(array)>2:
+        if string.find(array[2], "[") > 0:
+
+            tagToColor = {}
+            for shortCode in colordict:
+                tagToColor["[ " + shortCode + " ]"] = "[" \
+                    + colordict[shortCode] + " " + shortCode + " " \
+                    + chetcolors.DEFAULTBG + "]"
+
+            for tag in tagToColor:
+                array[2] = string.replace(array[2], tag, tagToColor[tag])
+
+            """
+            otherCode = array[2][string.find(array[2], "[") + 2]
+            if otherCode in colordict:
+                array[2] = string.replace(
+                    array[2], "[", ("[" + colordict[otherCode]))
+                array[2] = string.replace(
+                    array[2], "]", (chetcolors.DEFAULTBG + "]"))
+            """
     print '\t'.join(array)
 
 def make_async(fd):

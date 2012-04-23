@@ -52,7 +52,10 @@ import aggregation
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
+
 ### Application ##############################################################
+__name__ = "Timber/Hiss"
+__summary__ = "Gossip on Twisted in Python"
 __version__ = "0.0.1"
 __web__ = "github.com/chetmancini"
 __author__ = "Chet Mancini"

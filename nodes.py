@@ -24,10 +24,12 @@ import traceback
 # External Library imports
 import zope.interface
 import twisted.internet.tcp
+import twisted.internet.reactor
 
 # Local Imports
 import config
 import connections
+import me
 import vectorClock
 from debug import debug
 from timber_exceptions import GeneralError
@@ -186,30 +188,53 @@ class ExternalNode(BaseNode):
         self._tcpConnection = None
         self._knownAlive = True
 
-    def openTCPConnection(self, bindAddress=None, connector=None):
+    def openTCPConnection(self, bindAddress=None):
         """
         Open a new TCP connection from the local node to this node.
         """
-        debug("Opening a new connection", info=True)
-        connections.openConnection(self.getIp(), self.getPort())
-        '''
+        debug("Trying to a new connection to [ " + self.getShortUid() + " ]",
+            info=True)
+        connector = connections.openConnection(self.getIp(), self.getPort())
+        
         if not bindAddress:
-            bindAddress = config.getNextSendPort()
+            bindAddress = (me.getMe().getIp(), config.getNextSendPort())
+            #bindAddress = twisted.internet.address.IPv4Address(
+            #    'TCP', me.getMe().getIp(), config.SEND_PORT)
+            #config.getNextSendPort()
+        """
         c = connections.HissTCPClientConnection.fromPrimitives(
             self,
             self.getIp(), 
             self.getPort(), 
             bindAddress,
             connector)
+        """
+        '''
+        c = connections.HissTCPClientConnection.fromPrimitives(
+            self,
+            self.getIp(), 
+            self.getPort(), 
+            None,
+            connector)
         self._tcpConnection = c
         '''
+        c = connections.HissConnection.fromPrimitives(
+            self,
+            self.getIp(), 
+            self.getPort(), 
+            None,
+            connector)
+        self._tcpConnection = c
 
     def setTCPConnection(self, tcpConn):
         """
         Assign a TCP connection to this node.
         """
-        debug("Setting Connection", info=True)
-        self._tcpConnection = connections.HissTCPClientConnection(
+        debug("Setting up connection to [ " + self.getShortUid() + " ]", 
+            info=True)
+        #self._tcpConnection = connections.HissTCPClientConnection(
+        #    self, tcpConn)
+        self._tcpConnection = connections.HissConnection(
             self, tcpConn)
 
     def getTCPConnection(self):
@@ -230,9 +255,10 @@ class ExternalNode(BaseNode):
         """
         Destroy the TCP connection 
         """
-        debug("Destroying connection", info=True)
+        debug("Destroying connection to [ " + self.getShortUid() + " ]", 
+            info=True)
         if self.hasTCPConnection():
-            self.getTCPConnection().loseConnection()
+            self.getTCPConnection().loseConnection("destroying it.")
         self._tcpConnection = None
 
     @staticmethod
@@ -308,5 +334,5 @@ def buildNode(nodestr):
     try:
         return cPickle.loads(str(nodestr))
     except Exception as e:
-        debug("Could not depickle " + nodestr, error=True)
+        debug("Could not depickle node:" + nodestr, error=True)
         debug(e)

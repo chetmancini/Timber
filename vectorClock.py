@@ -138,14 +138,14 @@ class VectorClock(object):
             else:
                 self._clocks[key] = otherclock[key] 
                 #automatically adds new key
-        debug("Merged Vector Clocks", info=True)
+        debug("Merged Vector Clocks", success=True)
 
 
     def receiveMessage(self, vectorMessage):
         """
         Receive a message and update this clock.
         """
-        assert(vectorMessage is VectorMessage)
+        #assert(vectorMessage is message.VectorMessage)
         self.incrementClock()
         self.mergeClock(vectorMessage.getPayload())
 
