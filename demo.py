@@ -45,6 +45,7 @@ nextSendPort = 0
 ON_POSIX = 'posix' in sys.builtin_module_names
 
 q = Queue()
+qmonitor = Queue()
 
 colordict = {}
 
@@ -88,6 +89,9 @@ class bcolors:
         self.ENDC = ''
 
 class chetcolors:
+    """
+    Define colors.
+    """
     BLACKFG = '\x1b[30m'
     REDFG = '\x1b[31m'
     GREENFG = '\x1b[32m'
@@ -123,13 +127,31 @@ class chetcolors:
 
 
 ### Functions ################################################################
-def handleLine(line, header=False):
+def handleMonitor(array):
+    #try new node
+    for item in array:
+        if item.find("Init called") >= 0:
+            elements = item.split(" ")
+            for element in elements:
+                if len(element) == 32:
+                    uid = element.strip()
+                    short = array[1].strip()
+                    qmonitor.put_nowait("#".join(["New", short, uid]))
+
+def handleLine(line, header=False, monitor=False):
+    """
+    Handle receipt of line.
+    """
     isSuccess = line[0] == "*"
     isInfo = line[0] == "-"
     isStrange = line[0] == "?"
     isError = line[0] == "!"
 
     array = line.split("\t")
+
+    if monitor:
+        handleMonitor(array)
+
 
     if len(array) < 3:
         print line
@@ -163,14 +185,6 @@ def handleLine(line, header=False):
             for tag in tagToColor:
                 array[2] = string.replace(array[2], tag, tagToColor[tag])
 
-            """
-            otherCode = array[2][string.find(array[2], "[") + 2]
-            if otherCode in colordict:
-                array[2] = string.replace(
-                    array[2], "[", ("[" + colordict[otherCode]))
-                array[2] = string.replace(
-                    array[2], "]", (chetcolors.DEFAULTBG + "]"))
-            """
     print '\t'.join(array)
 
 def make_async(fd):
@@ -238,11 +252,6 @@ def createProcess():
         stderr=subprocess.PIPE)
     return process
 
-def createAsyncProcess():
-    argList = buildCommandArgs()
-    proc = asyncproc.Process(argList)
-    return proc
-
 def parse_args():
     """
     Parse command line arguments
@@ -257,6 +266,11 @@ def parse_args():
         type=int, 
         help='number of nodes to launch')
 
+    parser.add_argument('--monitor', 
+        default=False, 
+        type=bool, 
+        help='show the monitor')
+
     parser.parse_args(namespace=arguments)
     return arguments
 
@@ -266,13 +280,26 @@ if __name__ == "__main__":
     """
     Run demo application.
     """
-    def worker(pipe):
+    def readWorker(pipe):
+        """
+        read worker.
+        """
         while True:
             line = pipe.readline()
             if line == '':
                 break
             else:
-                q.put(line.strip())
+                q.put_nowait(line.strip())
+
+    def writeWorker(pipe):
+        """
+        write worker
+        """
+        line = qmonitor.get_nowait()
+        if line:
+            pipe.write(line)
+            pipe.flush()
+
     """
     #def enqueue_output(*args):
         #for line in iter(out.readline, b''):
@@ -292,15 +319,26 @@ if __name__ == "__main__":
 
     for i in range(args.count):
         proc = createProcess()
-        stdout_worker = ThreadWorker(worker, proc.stdout)
-        stderr_worker = ThreadWorker(worker, proc.stderr)
+        stdout_worker = ThreadWorker(readWorker, proc.stdout)
+        stderr_worker = ThreadWorker(readWorker, proc.stderr)
         stdout_worker.start()
         stderr_worker.start()
         time.sleep(1)
+
+    if args.monitor:
+
+        print "Running: ",' '.join(argList)
+        proc = subprocess.Popen(argList, 
+            shell=False, 
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            stdin=subprocess.PIPE)
+        stdin_worker = ThreadWorker(writeWorker, proc.stdin)
+
     while True: 
         try:
             line = q.get_nowait()
         except Empty:
             pass
         else:
-            handleLine(line)
+            handleLine(line, monitor=args.monitor)

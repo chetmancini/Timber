@@ -17,7 +17,7 @@ class TimberTestCase(unittest.TestCase):
 
     def _test_error(self, operation):
         pass
-"""        self.assertRaises(TypeError, operation, "foo", 2)
+	"""        self.assertRaises(TypeError, operation, "foo", 2)
         self.assertRaises(TypeError, operation, "bar", "egg")
         self.assertRaises(TypeError, operation, [3], [8, 2])
         self.assertRaises(TypeError, operation, {"e": 3}, {"r": "t"})"""

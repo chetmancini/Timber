@@ -40,7 +40,9 @@ def sdbConnect():
                 config.AWS_ACCESS_KEY,
                 config.AWS_SECRET_KEY)
             if sdbConnection:
-                debug("Connection to SimpleDB established", success=True)
+                debug("Connection to SimpleDB initialized", 
+                    success=True, 
+                    threshold=1)
         except Exception as e:
             print e
             raise

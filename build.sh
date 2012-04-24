@@ -1,3 +1,4 @@
 python debug.py
-rm *.pyc
-rm monitor/*.class
+cd monitor/
+VAR=$CLASSPATH
+javac -cp $VAR:. TimberMonitor.java
