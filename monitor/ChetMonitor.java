@@ -46,26 +46,23 @@ public class ChetMonitor {
 	public ChetMonitor() {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
-
 		Thread t = new Thread(new StaticLayoutUpdater(), "StaticLayoutUpdater");
 		t.start();
-		
 		mainloop();
-		
-		
-		//Thread p = new Thread(new VertexPruner(this), "VertexPruner");
-		//p.start();
 	}
 	
 	public void mainloop(){
 		while(true){
 			String nextLine = scan.next();
 			String[] arr = nextLine.split("#");
+			//New node.
 			if (arr[0].equals("New")){
 				Vertex toadd = new Vertex(arr[1], arr[2]);
 				vertices.put(arr[2], toadd);
+			// Dead node
 			}else if(arr[0].equals("Dead")){
 				vertices.remove(arr[1]);
+			//Add a message
 			}else if(arr[0].equals("Msg")){
 				if(arr.length == 4){
 					Edge toadd = new Edge(vertices.get(arr[1]), vertices.get(arr[2]), arr[3]);
@@ -77,11 +74,12 @@ public class ChetMonitor {
 							arr[3],
 							Float.parseFloat(arr[4]));
 				}
+			// Update load by weight of vertices.
 			}else if(arr[0].equals("Load")){
 				if(arr.length==3){
-					String name = arr[1];
+					String uid = arr[1];
 					int load = Integer.parseInt(arr[2]);
-					//setsize
+					vertices.get(uid).setLoad(load);
 				}
 			}
 		}
@@ -94,16 +92,9 @@ public class ChetMonitor {
 	private final Transformer<String, Paint> edgeGossipTransformer = new Transformer<String, Paint>() {
 		@Override
 		public Paint transform(String s) {
-			if (s.startsWith("ndp")) {
+			if (s.equals("V")) {
 				return Color.BLUE;
-			} else if (s.startsWith("mdp") || s.startsWith("mr")) {
-				/*
-				 * Dark green, calculated from:
-				 * 
-				 * http://www.squarebox.co.uk/users/rolf/download/ColourWheel/
-				 */
-				return Color.getHSBColor((float) 0.3, (float) 0.9, (float) 0.6);
-			} else if (s.startsWith("udp") || s.startsWith("ur")) {
+			} else if (s.equals("AG")) {
 				return Color.RED;
 			} else {
 				return Color.BLACK;
@@ -120,16 +111,8 @@ public class ChetMonitor {
 	private final Transformer<String, Stroke> edgeCommandTransformer = new Transformer<String, Stroke>() {
 		@Override
 		public Stroke transform(String s) {
-			Stroke bs;
-			if (s.startsWith("mr")) {
-				float dash[] = {10.0f};
-				bs = new BasicStroke(9.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-			} else if (s.startsWith("ur")) {
-				bs = new BasicStroke(9.0f);
-			} else {
-				bs = new BasicStroke(1.0f);
-			}
-			return bs;
+			Vertex tochange = vertices.get(s);
+			return new BasicStroke(tochange.getLoad());
 		}
 	};
 	
