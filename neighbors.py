@@ -1,0 +1,147 @@
+##############################################################################
+#        __  ___                                                             #
+#       / / / (_)_________                                                   #
+#      / /_/ / / ___/ ___/                                                   #
+#     / __  / (__  |__  )                                                    #
+#    /_/ /_/_/____/____/        Gossip with Python on Twisted                #
+#                                                                            #
+##############################################################################
+
+### Imports ##################################################################
+import zope.interface
+import connections
+
+### Interfaces ###############################################################
+class INeighborStrategy(zope.interface.Interface):
+    """
+    Neighbor strategy interface.
+    """
+
+    def getNeighbors():
+        """
+        Get the neighbors of this node.
+        """
+
+### Classes ##################################################################
+class BaseNeighborStrategy(object):
+    """
+    Base Class for Neighbor Strategies
+    """
+
+    zope.interface.implements(INeighborStrategy)
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        pass
+
+    def getNeighbors(self):
+        """
+        Get neighbors
+        """
+        pass
+
+    def _universeUids(self):
+        """
+        Helper method to get uids.
+        """
+        return sorted(connections.universe.keys())
+
+class RandomNeighborStrategy(BaseNeighborStrategy):
+    """
+    Class to pick neighbors at random (every time)
+    Can result in a lot of open TCP connections.
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(RandomNeighborStrategy, self).__init__()
+
+    def getNeighbors(self):
+        """
+        Get random neighbors.
+        """
+        return None
+
+
+class AllNeighborStrategoy(BaseNeighborStrategy):
+    """
+    Avoid. Completely defeats point of gossip! 
+    Very effective for small systems though
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(AllNeighborStrategoy, self).__init__()
+
+    def getNeighbors(self):
+        """
+        Get all neighbors
+        """
+        return connections.universe.keys()
+
+class SingleNeighborStrategy(BaseNeighborStrategy):
+    """
+    Very slow to propogate information.
+    """
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(SingleNeighborStrategy, self).__init__()
+
+    def getNeighbors(self):
+        """
+        Get a single neighbor.
+        """
+        sortedkeys = self._universeUids()
+        ix = sortedkeys.index(me.getUid())
+        if ix == (len(sortedkeys)-1):
+            return sortedkeys[0]
+        else:
+            return sortedkeys[ix+1]
+
+class LogarithmicNeighborStrategy(BaseNeighborStrategy):
+    """
+    Return a number of neighbors logarithmic in size of the universe.
+    Scales well, but not infinitely.
+    """
+
+    def __init__(self, base=10):
+        """
+        Constructor
+        """
+        super(LogarithmicNeighborStrategy, self).__init__()
+        self._base = base
+
+    def getNeighbors(self):
+        """
+        Get logarithmic count of neighbors
+        """
+
+
+class ConstantNeighborStrategy(BaseNeighborStrategy):
+    """
+    Return the same neighbors of constant number. May change
+    when nodes die or leave system.
+    """
+
+    def __init__(self, count):
+        """
+        Constructor
+        """
+        super(ConstantNeighborStrategy, self).__init()
+        self._count = count
+        self._neighbors = set([])
+
+    def getNeighbors(self):
+        """
+        Get constant set of neighbors
+        """
+        return None
