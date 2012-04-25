@@ -30,7 +30,7 @@ import config
 import connections
 import message
 import aggregation
-import group_membership
+import membership
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
@@ -161,7 +161,7 @@ class GossipServerFactory(ServerFactory):
         """
         # We want to run members refresh every once in awhile
         self.membersLoop = task.LoopingCall(connections.maintainMembers)
-        self.membersLoop.start(group_membership.getRandomWaitTimeSecs(), True)
+        self.membersLoop.start(membership.getRandomWaitTimeSecs(), True)
 
         debug("Gossip Server Factory created!", success=True)
 

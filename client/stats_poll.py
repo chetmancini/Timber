@@ -76,7 +76,7 @@ def poll(name, host='127.0.0.1', port=8080):
     """
     Poll for a specific statistic.
     """
-    print "starting to poll",host, str(port), "with name",name
+    print "starting to poll",host + ":" + str(port), "with name",name
     content = { 'stat': name }
     data = json.dumps(content)
     agent = twisted.web.client.Agent(twisted.internet.reactor)
@@ -88,23 +88,25 @@ def poll(name, host='127.0.0.1', port=8080):
                  'Content-Type': ['text/json']}),
         data)
 
+    def cbShutdown(ignored):
+        twisted.internet.reactor.stop()
+
     def cbResponse(ignored):
         global count
         print 'Response received'
         count += 1
         agent = twisted.web.client.agent(twisted.internet.reactor)
-        rnext = agent.request()
-        rnext.addCallback(cbResponse)
-        rnext.addBoth(cbShutdown)
+        d = agent.request(
+            'GET',
+            'http://' + host + ":" + str(port) + "/stat",
+            twisted.web.http_headers.Headers({'User-Agent': ['Twisted Web Client Example'],
+                     'Content-Type': ['text/json']}),
+            data)
+        d.addCallback(cbResponse)
+        d.addBoth(cbShutdown)
         
     d.addCallback(cbResponse)
-
-    def cbShutdown(ignored):
-        twisted.internet.reactor.stop()
-
     d.addBoth(cbShutdown)
-
-    twisted.internet.reactor.run()
 
 
 ### Main #####################################################################
@@ -131,3 +133,4 @@ if __name__ == "__main__":
         else:
             exit()
     """
+    twisted.internet.reactor.run()

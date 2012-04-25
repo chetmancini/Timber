@@ -22,8 +22,8 @@ Whether to use IP version 6. turn off for now.
 """
 
 DEFAULT_SEND_PORT = 30581
-DEFAULT_RECEIVE_PORT = 30481
-DEFAULT_LOG_PORT = 8080
+DEFAULT_RECEIVE_PORT = 30081
+DEFAULT_LOG_PORT = 8081
 """
 Default port to receive on / send to.
 Default port to communicate from / recieve from.

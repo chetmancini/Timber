@@ -206,10 +206,10 @@ def maintainMembers():
 
     possibledead = set(universe.keys())
 
-    group_membership.membersRefresh()
+    membership.membersRefresh()
 
     # Add in new nodes.
-    tempUniverse = group_membership.getCurrentMemberDict()
+    tempUniverse = membership.getCurrentMemberDict()
     for uid in tempUniverse:
         if uid not in universe and not me.getMe().__eq__(tempUniverse[uid]):
             universe[uid] = nodes.ExternalNode.fromBase(tempUniverse[uid])
