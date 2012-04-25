@@ -8,6 +8,7 @@ TODO
 * Storage Layer (make sure no blocking)
 * Polling app
 * Dead node/New node process.
+* Neighbor selection.
 
 
 Future Improvments

@@ -135,7 +135,8 @@ if __name__ == "__main__":
     import vectorClock
     import message
     import messagequeue
-    import group_membership
+    import membership
+    import neighbors
     import simpledb
     import timber
     import stats

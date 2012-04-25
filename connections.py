@@ -33,7 +33,7 @@ import me
 import gossip
 import message
 import nodes
-import group_membership
+import membership
 from debug import debug
 
 ### Classes ##################################################################
