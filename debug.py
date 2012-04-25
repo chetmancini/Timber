@@ -146,5 +146,6 @@ if __name__ == "__main__":
 
 
     py = countLinesOfCode('.', 'py')
+    client = countLinesOfCode('./client/', 'py')
     jav = countLinesOfCode('monitor/', 'java')
-    print 'Total:',str(py+jav)
+    print 'Total:',str(py+client+jav)

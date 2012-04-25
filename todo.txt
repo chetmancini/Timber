@@ -18,3 +18,6 @@ Decouple Timber from Hiss. Timber not a terribly interesting
 program, but with some work Hiss could be a useful package
 for the Python community. Unfortunately code seperation was
 not a foremost concern when i was developing.
+
+
+Add better neighbor selection.

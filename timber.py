@@ -48,6 +48,7 @@ from twisted.python import components, log
 # Local Imports
 import config
 import me
+import stats
 import aggregation
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
@@ -163,9 +164,8 @@ class TimberStatsResource(resource.Resource):
             return json.dumps(toReturn)
             debug("Sent back stat " + name, success=True)
         except Exception as e:
-            debug(e)
-            debug("Could not return stat", error=True)
-            return "Error. Sorry."
+            debug("Could not return Stat. Assuming help.", error=True)
+            return "'" + "' | '".join(aggregation.STATISTICS.keys()) + "'"
 
     def render_POST(self, request):
         """
