@@ -22,6 +22,9 @@ import twisted.web.http_headers
 ### Constants ################################################################
 STATISTICS = []
 
+### Variables ################################################################
+count = 10
+
 ### Arguments ################################################################
  
 ### Classes ##################################################################
@@ -43,7 +46,7 @@ def parse_args():
 
     parser.add_argument('--stat',
         default='all',
-        type=str.
+        type=str,
         help='which statistic to poll')
 
     parser.add_argument('--infinity', 
@@ -52,7 +55,7 @@ def parse_args():
         help='Run forever')
 
     parser.add_argument('--delay',
-        default=10,
+        default=5,
         type=int,
         help='time between requests')
 
@@ -73,9 +76,10 @@ def poll(name, host='127.0.0.1', port=8080):
     """
     Poll for a specific statistic.
     """
+    print "starting to poll",host, str(port), "with name",name
     content = { 'stat': name }
-    data = json.loads(content)
-    agent = twisted.web.client.Agent(reactor)
+    data = json.dumps(content)
+    agent = twisted.web.client.Agent(twisted.internet.reactor)
 
     d = agent.request(
         'GET',
@@ -85,11 +89,19 @@ def poll(name, host='127.0.0.1', port=8080):
         data)
 
     def cbResponse(ignored):
+        global count
         print 'Response received'
+        count += 1
+        agent = twisted.web.client.agent(twisted.internet.reactor)
+        rnext = agent.request()
+        rnext.addCallback(cbResponse)
+        rnext.addBoth(cbShutdown)
+        
     d.addCallback(cbResponse)
 
     def cbShutdown(ignored):
-        reactor.stop()
+        twisted.internet.reactor.stop()
+
     d.addBoth(cbShutdown)
 
     twisted.internet.reactor.run()
@@ -101,7 +113,8 @@ if __name__ == "__main__":
     Main
     """
     args = parse_args()
-
+    poll('pmemavailable')
+    """
     while True:
 
         if args.stat == 'all':
@@ -110,14 +123,11 @@ if __name__ == "__main__":
         elif args.stat == 'input':
             stat = raw_input(
                 "Enter a stat to poll. Choices: " + "|".join(STATISTICS))
-            poll(stat)
+            poll(stat.strip())
         else:
-            poll(args.stat)
-
-
-        if not args.infinity:
-            break
-
-        time.sleep(args.delay)
-
-
+            print "got here"
+            poll(args.stat.strip())
+        
+        else:
+            exit()
+    """

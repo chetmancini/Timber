@@ -1,1 +1,1 @@
-python stats_poll.py --infinity False --host 127.0.0.1 --port 8080 --stat "all"
+python stats_poll.py --host 127.0.0.1 --port 8080 --stat "all"
