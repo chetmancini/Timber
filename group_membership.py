@@ -85,7 +85,7 @@ def membersRefresh():
                             debug("Noop failed. Node removed.", info=True)
                     else:
                         pass
-        members[me.getMe().getUid()] = me.getMe().getBaseData()
+        members[me.getUid()] = me.getMe().getBaseData()
 
         for key in members:
             if key in members_to_delete:
@@ -95,9 +95,8 @@ def membersRefresh():
         debug("There are " + str(len(members)) + " members in the system.", 
             info=True)
     except Exception as e:
-        print e
+        debug(e)
         traceback.print_exc(file=sys.stdout)
-        debug("Members refresh failed", error=True)
 
     persistSet()
 
@@ -109,9 +108,6 @@ def persistSet():
         toWrite = {}
         for member in members:
             toWrite[member] = members[member].getCompressed()
-        #output = ""
-        #for member in members:
-        #    output += member.getCompressed() + GLUE
         debug("String to persist built", info=True)
         simpledb.putSet(ITEMKEY, toWrite)
         if len(members_to_delete) > 0:
@@ -119,6 +115,6 @@ def persistSet():
             debug("DELETing members", info=True)
         debug("Member set persisted correctly", success=True)
 
-    except:
+    except Exception as e:
+        debug(e)
         traceback.print_exc(file=sys.stdout)
-        debug("Persist set failed", error=True)

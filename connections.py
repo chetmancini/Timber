@@ -193,6 +193,8 @@ def init():
     """
     me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
+    debug("#".join(["New", me.getMe().getShortUid(), me.getUid()]), 
+        monitor=True)
 
 def maintainMembers():
     """
@@ -336,6 +338,8 @@ def clientConnectionLost((host, port)):
 def assignTransport(uid, transport):
     try:
         lookupNode(uid).setTCPConnection(transport)
+    except KeyError as ke:
+        pass
     except Exception as e:
         debug(e)
 

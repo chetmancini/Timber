@@ -27,7 +27,7 @@ import me
 
 ### Constants ################################################################
 DEBUG_FLG = True
-THRESHOLD = 1 # scale of 1 to 10
+THRESHOLD = 2 # scale of 1 to 10
 INCLUDE_UID = True
 
 ### Variables ################################################################
@@ -66,7 +66,8 @@ def debug(
     error=False, 
     success=False, 
     info=False, 
-    strange=False):
+    strange=False,
+    monitor=False):
     """
     Main debug function.
     """
@@ -90,6 +91,8 @@ def debug(
                 printMessage("- INFO:   \t" + uidstr + msg)
             elif strange:
                 printMessage("? STRANGE:\t" + uidstr + msg)
+            elif monitor:
+                printMessage("MONITOR: " + msg)
             else:
                 printMessage(msg)
         else:
@@ -99,16 +102,15 @@ def debug(
         print "! ERROR:  ", msg
         traceback.print_exc(file=sys.stderr)
 
-def countLinesOfCode():
+def countLinesOfCode(path=".", extension='py'):
     """
     Procedure to count total lines of code in each file
     """
     total = 0
-    path = '../Timber'
     listing = os.listdir(path)
     for fname in listing:
-        if fname[-2:] == "py":
-            with open(fname) as f:
+        if fname[-1*len(extension):] == extension:
+            with open(os.path.join(path, fname)) as f:
                 for i, l in enumerate(f):
                     if len(l) > 80:
                         print "line " + str(i) + " of " \
@@ -117,12 +119,14 @@ def countLinesOfCode():
             print string.rjust(fname, 25) + "\t" + str(subtotal)
             total += subtotal
     print total
+    return total
 
 if __name__ == "__main__":
     """
     TEST ALL THE THINGS!!!1!
     """
     import me
+    import config
     import launch
     import nodes
     import gossip
@@ -140,4 +144,6 @@ if __name__ == "__main__":
     import demo
 
 
-    countLinesOfCode()
+    py = countLinesOfCode('.', 'py')
+    jav = countLinesOfCode('monitor/', 'java')
+    print 'Total:',str(py+jav)

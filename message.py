@@ -177,8 +177,12 @@ class GenericMessage(object):
                 else:
                     # Ok, stop messing around and send the message!
                     try:
-                        tcpConn = node.getTCPConnection().dispatchMessage(self)
+                        tcpConn = node.getTCPConnection().dispatchMessage(
+                            self)
                         recs.append(node.getShortUid())
+                        debug("#".join(
+                            ["Msg", me.getUid(), uid, self.getCode()]),
+                            monitor=True)
                     except:
                         debug("Failed to send message to [ " \
                             + node.getShortUid() + " ]", error=True)
@@ -339,7 +343,8 @@ class MeMessage(NetworkStatusMessage):
         try:
             nodeData = node.buildNode(self._payload)
             if nodeData.getUid() not in connections.universe:
-                connections.universe[nodeData.getUid()] = nodes.ExternalNode.fromBase(nodeData)
+                connections.universe[nodeData.getUid()] = \
+                    nodes.ExternalNode.fromBase(nodeData)
             connections.universe[nodeData.getUid()].knownAlive = True
             debug('Reponded to a MeMessage', success=True)
         except:

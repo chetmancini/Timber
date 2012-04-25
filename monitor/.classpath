@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="build/" kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/home/chet/bin/jung-3d-2.0.1.jar"/>
 	<classpathentry kind="lib" path="/home/chet/bin/jung-3d-demos-2.0.1.jar"/>
 	<classpathentry kind="lib" path="/home/chet/bin/jung-algorithms-2.0.1.jar"/>

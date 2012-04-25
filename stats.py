@@ -277,7 +277,6 @@ def timber_thread_count():
     """
     return p.get_num_threads()
 
-
 def timber_load():
     """
     Calculate Timber's IO load since the last call

@@ -127,8 +127,9 @@ class chetcolors:
 
 
 ### Functions ################################################################
-def handleMonitor(array):
+def handleMonitor(line):
     #try new node
+    """
     for item in array:
         if item.find("Init called") >= 0:
             elements = item.split(" ")
@@ -137,6 +138,16 @@ def handleMonitor(array):
                     uid = element.strip()
                     short = array[1].strip()
                     qmonitor.put_nowait("#".join(["New", short, uid]))
+    """
+    if line.find("MONITOR:") > -1:
+        towrite = string.replace(line, "MONITOR: ", "").strip() + "\n"
+        qmonitor.put(towrite)
+        #print 'putting: "' + towrite + '"'
+        return True
+    else:
+        return False
+
+
 
 def handleLine(line, header=False, monitor=False):
     """
@@ -147,11 +158,11 @@ def handleLine(line, header=False, monitor=False):
     isStrange = line[0] == "?"
     isError = line[0] == "!"
 
-    array = line.split("\t")
-
     if monitor:
-        handleMonitor(array)
+        if handleMonitor(line):
+            return
 
+    array = line.split("\t")
 
     if len(array) < 3:
         print line
@@ -295,17 +306,12 @@ if __name__ == "__main__":
         """
         write worker
         """
-        line = qmonitor.get_nowait()
-        if line:
-            pipe.write(line)
-            pipe.flush()
-
-    """
-    #def enqueue_output(*args):
-        #for line in iter(out.readline, b''):
-        #    queue.put(line)
-        #out.close()
-    """
+        while True:
+            line = qmonitor.get(True) #block
+            if line:
+                #print "FOUND:",line
+                pipe.write(line)
+                pipe.flush()
 
     nextLogPort = config.DEFAULT_LOG_PORT
     nextReceivePort = config.DEFAULT_RECEIVE_PORT
@@ -315,8 +321,19 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    processes = []
+    if args.monitor:
+        command = 'java -cp /home/chet/bin/jung-visualization-2.0.1.jar:' \
+            + '/home/chet/bin/jung-graph-impl-2.0.1.jar:. ' \
+            + 'monitor.TimberMonitor'
+        print "Running: ", command
+        proc = subprocess.Popen(
+            command, 
+            shell=True,
+            stdin=subprocess.PIPE)
+        stdin_worker = ThreadWorker(writeWorker, proc.stdin)
+        stdin_worker.start()
 
+    processes = []
     for i in range(args.count):
         proc = createProcess()
         stdout_worker = ThreadWorker(readWorker, proc.stdout)
@@ -324,16 +341,6 @@ if __name__ == "__main__":
         stdout_worker.start()
         stderr_worker.start()
         time.sleep(1)
-
-    if args.monitor:
-
-        print "Running: ",' '.join(argList)
-        proc = subprocess.Popen(argList, 
-            shell=False, 
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            stdin=subprocess.PIPE)
-        stdin_worker = ThreadWorker(writeWorker, proc.stdin)
 
     while True: 
         try:

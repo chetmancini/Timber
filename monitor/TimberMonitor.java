@@ -1,3 +1,5 @@
+package monitor;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,9 +22,16 @@ import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 
-
+/**
+ * Timber monitor
+ * Modified from code by Josh Endries
+ * @author Chet Mancini
+ */
 public class TimberMonitor {
     
+    /**
+     * JFrame to use
+     */
     protected JFrame frame = new JFrame("Monitor");
     
     /**
@@ -30,18 +39,35 @@ public class TimberMonitor {
      */
     public static final int Width = 600;
     public static final int Height = 400;
-    public static final int LayoutUpdateDelay = 250;
+    public static final int LayoutUpdateDelayMillis = 500;
     
-    private ConcurrentHashMap<String, Vertex> vertices = new ConcurrentHashMap<String, Vertex>();
+    /**
+     * Map of vertices accessible by their UID.
+     */
+    private ConcurrentHashMap<String, Vertex> vertices = 
+        new ConcurrentHashMap<String, Vertex>();
     
-    private ConcurrentLinkedQueue<Edge> edgeList = new ConcurrentLinkedQueue<Edge>();
+    /**
+     * Edges don't persist, so they live in a queue.
+     */
+    private ConcurrentLinkedQueue<Edge> edgeQueue = 
+        new ConcurrentLinkedQueue<Edge>();
     
+    /**
+     * Scanner for reading in from system.in.
+     */
     private Scanner scan = new Scanner(System.in);
     
     /**
      * The amount of milliseconds for which an edge appears on the graph.
      */
     public static final int EdgeDelay = 500;
+
+    /**
+     * Each edge needs a unique name.
+     */
+    private int edgeCounter = 0;
+    private final int maxedges = 100;
     
     /**
      * Create a new monitor and start the updater threads.
@@ -49,11 +75,15 @@ public class TimberMonitor {
     public TimberMonitor() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
-        Thread t = new Thread(new StaticLayoutUpdater(), "StaticLayoutUpdater");
+        Thread t = new Thread(
+            new StaticLayoutUpdater(), "StaticLayoutUpdater");
         t.start();
         mainloop();
     }
     
+    /**
+     * Main logic.
+     */
     public void mainloop(){
         while(true){
             String nextLine = scan.next();
@@ -68,14 +98,23 @@ public class TimberMonitor {
             //Add a message
             }else if(arr[0].equals("Msg")){
                 if(arr.length == 4){
-                    Edge toadd = new Edge(vertices.get(arr[1]), vertices.get(arr[2]), arr[3]);
-                    edgeList.add(toadd);
+
+                    Edge toAdd = new Edge(
+                        vertices.get(arr[1]), 
+                        vertices.get(arr[2]), 
+                        arr[3]);
+
+                    edgeQueue.add(toAdd);
+
                 }else if(arr.length == 5){
-                    Edge toadd = new Edge(
+
+                    Edge toAdd = new Edge(
                             vertices.get(arr[1]), 
                             vertices.get(arr[2]),
                             arr[3],
                             Float.parseFloat(arr[4]));
+
+                    edgeQueue.add(toAdd);
                 }
             // Update load by weight of vertices.
             }else if(arr[0].equals("Load")){
@@ -87,12 +126,22 @@ public class TimberMonitor {
             }
         }
     }
+
+    private String getNextEdgeName(String code){
+        this.edgeCounter++;
+        if (this.edgeCounter > this.maxedges){
+            this.edgeCounter = 0;
+        }
+        return "(" + code + ") " + this.edgeCounter;
+    }
     
     /**
-     * Transform the given edge (by name) so that its color matches others that were generated from
-     * the same protocol.
+     * Transform the given edge (by name) so that its color matches others 
+     * that were generated from the same protocol.
      */
-    private final Transformer<String, Paint> edgeGossipTransformer = new Transformer<String, Paint>() {
+    private final Transformer<String, Paint> edgeGossipTransformer = 
+        new Transformer<String, Paint>() {
+
         @Override
         public Paint transform(String s) {
             if (s.equals("V")) {
@@ -106,30 +155,39 @@ public class TimberMonitor {
     };
 
     
-    
     /**
-     * Transform the given edge (based on name) so that certain commands (replication) have thicker
-     * edges than normal communication for that protocol.
+     * Edge command transformer
      */
-    private final Transformer<String, Stroke> edgeCommandTransformer = new Transformer<String, Stroke>() {
+    private final Transformer<String, Stroke> edgeCommandTransformer = 
+        new Transformer<String, Stroke>() {
+
         @Override
         public Stroke transform(String s) {
-            Vertex tochange = vertices.get(s);
-            return new BasicStroke(tochange.getLoad());
+            //Vertex tochange = vertices.get(s);
+            return new BasicStroke(1.0f);
         }
     };
     
     /**
-     * Transform the given edge (based on name) so that certain commands (replication) have thicker
+     * Transform the given edge (based on name) so that certain commands 
+     * (replication) have thicker
      * edges than normal communication for that protocol.
      */
-    private final Transformer<String, Stroke> vertexStrokeTransformer = new Transformer<String, Stroke>() {
+    private final Transformer<String, Stroke> vertexStrokeTransformer = 
+        new Transformer<String, Stroke>() {
+
         @Override
         public Stroke transform(String s) {
             Stroke bs;
             if (s.startsWith("mr")) {
                 float dash[] = {10.0f};
-                bs = new BasicStroke(9.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+                bs = new BasicStroke(
+                    9.0f, 
+                    BasicStroke.CAP_BUTT, 
+                    BasicStroke.JOIN_MITER, 
+                    10.0f, 
+                    dash, 
+                    0.0f);
             } else if (s.startsWith("ur")) {
                 bs = new BasicStroke(9.0f);
             } else {
@@ -142,21 +200,26 @@ public class TimberMonitor {
 
     
     /**
-     * Run through all the nodes and edges in the map and create graph edges and vertices for them.
+     * Run through all the nodes and edges in the map and create 
+     * graph edges and vertices for them.
      * 
      * @return The filled-in graph.
      */
     public Graph<String, String> getGraph() {
-        Graph<String, String> graph = new DirectedSparseMultigraph<String, String>();
+        Graph<String, String> graph = 
+            new DirectedSparseMultigraph<String, String>();
         
         Iterator<String> vi = vertices.keySet().iterator();
         while (vi.hasNext()){
             graph.addVertex(vertices.get(vi.next()).getName());
         }
 
-        while(edgeList.size()>0){
-            Edge toAdd = edgeList.poll();
-            graph.addEdge(toAdd.getCode(), toAdd.getA().getName(), toAdd.getB().getName());
+        while(edgeQueue.size()>0){
+            Edge toAdd = edgeQueue.poll();
+            graph.addEdge(
+                getNextEdgeName(toAdd.getCode()), 
+                toAdd.getA().getName(), 
+                toAdd.getB().getName());
         }
         return graph;
     }
@@ -167,17 +230,25 @@ public class TimberMonitor {
      * @param graph The graph to visualize.
      * @return The viewer.
      */
-    public BasicVisualizationServer<String, String> getViewer(Graph<String, String> graph) {
+    public BasicVisualizationServer<String, String> getViewer(
+        Graph<String, String> graph) {
+
         Dimension d = new Dimension(Width, Height);
-        Layout<String, String> layout = new CircleLayout<String, String>(graph);
+        Layout<String, String> layout = 
+            new CircleLayout<String, String>(graph);
         layout.setSize(d);
         layout.initialize();
-        BasicVisualizationServer<String, String> vv = new BasicVisualizationServer<String, String>(layout);
+        BasicVisualizationServer<String, String> vv = 
+            new BasicVisualizationServer<String, String>(layout);
         vv.setPreferredSize(d);
-        vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller<String>());
-        vv.getRenderContext().setEdgeDrawPaintTransformer(edgeGossipTransformer);
-        vv.getRenderContext().setEdgeStrokeTransformer(edgeCommandTransformer);
-        vv.getRenderContext().setVertexStrokeTransformer(vertexStrokeTransformer);
+        vv.getRenderContext().setVertexLabelTransformer(
+            new ToStringLabeller<String>());
+        // vv.getRenderContext().setEdgeDrawPaintTransformer(
+        //     edgeGossipTransformer);
+        // vv.getRenderContext().setEdgeStrokeTransformer(
+        //     edgeCommandTransformer);
+        // vv.getRenderContext().setVertexStrokeTransformer(
+        //     vertexStrokeTransformer);
         return vv;
     }
         
@@ -202,7 +273,7 @@ public class TimberMonitor {
                 frame.pack();
                 
                 try {
-                    Thread.sleep(LayoutUpdateDelay);
+                    Thread.sleep(LayoutUpdateDelayMillis);
                 } catch (InterruptedException e) {
                     running = false;
                 }
@@ -210,7 +281,9 @@ public class TimberMonitor {
         }
     }
     
-    
+    /**
+     * Main method. Create a TimberMonitor and run it.
+     */
     public static void main(String[] args){
         TimberMonitor monitor = new TimberMonitor();
     }

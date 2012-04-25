@@ -1,18 +1,19 @@
 TODO
-
-## Main Applicaiton
-
+=========================================
 
 ## Sister Applications
 
 * Load Balancer
-* Weight tester
-* Storage Layer
+* Weight tester / Timber polling
+* Storage Layer (make sure no blocking)
+* Polling app
+* Dead node/New node process.
 
-Implementations.
 
+Future Improvments
+==========================================
 
-
-Aggregation
-
-Not sure how we refresh information from the server
+Decouple Timber from Hiss. Timber not a terribly interesting
+program, but with some work Hiss could be a useful package
+for the Python community. Unfortunately code seperation was
+not a foremost concern when i was developing.

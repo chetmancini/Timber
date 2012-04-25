@@ -23,15 +23,24 @@
 me = None
 
 ### Functions ################################################################
-def getUid():
-	if me:
-		return me.getUid()
-	else:
-		return None
-
 def init(node):
-	global me
-	me = node
+    """
+    Initialize me with a new node.
+    """
+    global me
+    me = node
+
+def getUid():
+    """
+    convenience method to get the uid in hex of this node.
+    """
+    if me:
+        return me.getUid()
+    else:
+        return None
 
 def getMe():
+    """
+    Getter function for this node.
+    """
     return me

@@ -104,7 +104,7 @@ class GossipServerProtocol(Protocol):
         """
         When gossip data is received.
         """
-        debug("DATA RECEIVED BOOYAH!", success=True)
+        debug("DATA RECEIVED BOOYAH!", success=True, threshold=1)
         if len(data) == 32:
             connections.assignTransport(data, self.transport)
         else:
@@ -144,7 +144,7 @@ class GossipClientProtocol(Protocol):
         """
         Data received? this seems a little odd.
         """
-        debug("DATA RECEIVED...ON CLIENT?", strange=True)
+        debug("DATA RECEIVED VIA CLIENT", strange=True)
         if len(data) == 32:
             connections.assignTransport(data, self.transport)
         else:
@@ -197,9 +197,15 @@ class GossipServerFactory(ServerFactory):
         connections.lostClientAsServer(client.transport)
 
     def startFactory(self):
+        """
+        Start Factory
+        """
         pass
 
     def stopFactory(self):
+        """
+        Stop Factory
+        """
         pass
 
 

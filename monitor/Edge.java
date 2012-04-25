@@ -1,3 +1,4 @@
+package monitor;
 
 public class Edge {
 	private Vertex A;
@@ -58,6 +59,9 @@ public class Edge {
 		return this.B;
 	}
 	
+	/**
+	 * Get the code for this edge.
+	 */
 	public String getCode(){
 		return this.code;
 	}

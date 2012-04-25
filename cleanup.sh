@@ -1,2 +1,2 @@
 rm *.pyc
-rm monitor/*.class
+kill $(ps | grep 'python' | awk '{print $1}')

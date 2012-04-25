@@ -13,7 +13,6 @@
 ##############################################################################
 
 ### Imports ##################################################################
-
 # External Library Imports
 import zope.interface
 
@@ -137,7 +136,6 @@ class VectorClock(object):
                 self._clocks[key] = max(otherclock[key], self._clocks[key])
             else:
                 self._clocks[key] = otherclock[key] 
-                #automatically adds new key
         debug("Merged Vector Clocks", success=True)
 
 
@@ -145,7 +143,6 @@ class VectorClock(object):
         """
         Receive a message and update this clock.
         """
-        #assert(vectorMessage is message.VectorMessage)
         self.incrementClock()
         self.mergeClock(vectorMessage.getPayload())
 

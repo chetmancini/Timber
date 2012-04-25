@@ -1,4 +1,8 @@
+package monitor;
 
+/**
+ * Vertex
+ */
 public class Vertex {
 
 	private String name;
@@ -14,6 +18,7 @@ public class Vertex {
 	public Vertex(String name, String uid){
 		this.name = name;
 		this.uid = uid;
+		this.load = 1.0f;
 	}
 	
 	/**

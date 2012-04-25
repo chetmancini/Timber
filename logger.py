@@ -26,18 +26,18 @@ channel = None
 logcount = 0
 
 ### Functions ################################################################
-def logMessage(msgObject):
+def logMessage(message):
     """
-    Log a messsage
+    Log a messsage.
     """
     global logcount
     global channel
     global connection
 
     if USE_QUEUE:
-        if (msgObject.getCode() != "EL") or (msgObject.getCode() != "IL"):
+        if (message.getCode() != "EL") or (message.getCode() != "IL"):
 
-            debug("Invalid message" + msgObject.getCode(), error=True)
+            debug("Invalid message" + message.getCode(), error=True)
             raise "Invalid message"
 
         if connection == None:
@@ -45,17 +45,17 @@ def logMessage(msgObject):
         if channel == None:
             channel = getChannel(connection)
 
-        messagequeue.producter_pushText(channel, msgObject)
+        messagequeue.producter_pushText(channel, message)
     else:
-        if (msgObject.getCode() != "EL") or (msgObject.getCode() != "IL"):
+        if (message.getCode() != "EL") or (message.getCode() != "IL"):
 
-            debug("Invalid message" + msgObject.getCode(), error=True)
+            debug("Invalid message" + message.getCode(), error=True)
             raise "Invalid message"
 
     try:
         persist.log(
-            msgObject.getLevel(), 
-            msgObject.getPayload(), 
+            message.getLevel(), 
+            message.getPayload(), 
             True)
 
         debug("Message logged", success=True)
@@ -64,5 +64,9 @@ def logMessage(msgObject):
 
     logcount += 1
 
+
 def logCount():
+    """
+    Get the number of logs made on this machine.
+    """
     return logcount

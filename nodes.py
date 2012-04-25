@@ -139,7 +139,8 @@ class BaseNode(object):
         """
         Get a short version of this uid
         """
-        return chr((self.getUid().__hash__() % 26) + 65)
+        return chr((self.getUid().__hash__() % 26) + 65) + \
+            chr((self.getUid().__hash__() % 9) + 48)
 
     def getSerialized(self):
         """
