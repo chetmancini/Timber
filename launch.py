@@ -26,6 +26,7 @@ import aggregation
 import timber
 import gossip
 import config
+import logger
 import connections
 from debug import debug
 
@@ -121,6 +122,7 @@ def main():
 
     if not args.timberoff:
         timber.timberRun()
+        logger.loggerInit()
 
     if not args.hissoff:
         gossip.gossipRun()

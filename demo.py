@@ -257,7 +257,8 @@ def createProcess():
     process = subprocess.Popen(argList, 
         shell=False, 
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE)
     return process
 
 def parse_args():
@@ -332,11 +333,16 @@ if __name__ == "__main__":
 
     processes = []
     for i in range(args.count):
+        next = {}
         proc = createProcess()
         stdout_worker = ThreadWorker(readWorker, proc.stdout)
         stderr_worker = ThreadWorker(readWorker, proc.stderr)
         stdout_worker.start()
         stderr_worker.start()
+        next['proc'] = proc
+        next['stdout'] = stdout_worker
+        next['stderr'] = stderr_worker
+        processes.append(next)
         time.sleep(1)
 
     while True: 

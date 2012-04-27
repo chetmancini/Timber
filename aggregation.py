@@ -1,5 +1,4 @@
 ##############################################################################
-#                                                                            #
 #  .___________. __  .___  ___. .______    _______ .______                   #
 #  |           ||  | |   \/   | |   _  \  |   ____||   _  \                  #
 #  `---|  |----`|  | |  \  /  | |  |_)  | |  |__   |  |_)  |                 #
@@ -7,10 +6,11 @@
 #      |  |     |  | |  |  |  | |  |_)  | |  |____ |  |\  \----.             #
 #      |__|     |__| |__|  |__| |______/  |_______|| _| `._____|             #
 #                                                                            #
-#----------------------------------------------------------------------------#
-# aggretation.py                                                             #
-# Aggregation classes                                                        #
 ##############################################################################
+
+#----------------------------------------------------------------------------#
+# Aggregation.py                                                             #
+#----------------------------------------------------------------------------#
 
 ### Imports ##################################################################
 # Python Library imports
@@ -314,7 +314,7 @@ class UpdateAggregator(NamedAggregator):
     def getVectorClock(self):
         """
         Get the vector clock
-        """
+        """Looping
         return self._vectorClock
 
     def setVectorClock(self, vectorClock):
@@ -407,3 +407,10 @@ def getAggregation(name, local=False, minOnly=False, maxOnly=False):
         return toReturn["max"]
     else:
         return toReturn
+
+def refreshAll():
+    """
+    Refresh all the statistics.
+    """
+    for name in STATISTICS:
+        STATISTICS[name].refresh()

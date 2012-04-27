@@ -14,6 +14,10 @@
 
 ### Imports ##################################################################
 # Python Library imports
+try:
+    from Queue import Queue, Empty
+except ImportError:
+    from queue import Queue, Empty
 
 # External Library Imports
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -42,6 +46,7 @@ CONSUMER_TAG = "timber_consumer_tag"
 NON_PERSISTENT = 1
 PERSISTENT = 2
 
+queue = Queue()
 
 ### Common Functions #########################################################
 @inlineCallbacks

@@ -1,5 +1,4 @@
 ##############################################################################
-#                                                                            #
 #  .___________. __  .___  ___. .______    _______ .______                   #
 #  |           ||  | |   \/   | |   _  \  |   ____||   _  \                  #
 #  `---|  |----`|  | |  \  /  | |  |_)  | |  |__   |  |_)  |                 #
@@ -7,10 +6,6 @@
 #      |  |     |  | |  |  |  | |  |_)  | |  |____ |  |\  \----.             #
 #      |__|     |__| |__|  |__| |______/  |_______|| _| `._____|             #
 #                                                                            #
-#----------------------------------------------------------------------------#
-# connections.py                                                             #
-# Contains connection information about the current node and the nodes it    #
-# communicates with.                                                         #
 ##############################################################################
 
 ### Imports ##################################################################
@@ -171,16 +166,15 @@ Dictionary of nodes in the system. UID -> ExternalNode.
 Those contain the TCPConnections
 """
 
-neighbors = set([])
-"""
-set of uids to gossip with.
-"""
-
 knownDead = set([])
 """
 UIDs known to be dead.
 """
 
+neighborStrategy = None
+"""
+Neighbor Strategy
+"""
 
 ### Functions ################################################################
 
@@ -235,25 +229,13 @@ def isNeighbor(uid):
     """
     Is the id a neighbor of this node?
     """
-    return uid in neighbors
-
-def addNeighbor(uid):
-    """
-    Add a node to the neighbor set.
-    """
-    global neighbors
-    if uid in universe:
-        neighbors.add(uid)
-        universe[uid].openTCPConnection()
-
+    return neighborStrategy.isNeighbor()
 
 def removeNeighbor(uid):
     """
     Remove a node from the neighbor set
     """
-    global neighbors
-    if uid in neighbors:
-        neighbors.remove(uid)
+    neighborStrategy.removeNeighbor(uid)
 
 def getNeighbors():
     """
@@ -263,31 +245,7 @@ def getNeighbors():
     with the nearest nodes. Definitely an area for further design and 
     implementation.
     """
-    global neighbors
-    if len(neighbors) == 0:
-        neighbors = set(getRandomNeighbors())
-        if len(neighbors) > 0:
-            debug("There are now " + str(len(neighbors)) + "neighbors.", 
-                info=True)
-    return neighbors
-
-
-def getRandomNeighbors(count=None):
-    """
-    Return a random list of neighbors.
-    """
-    if len(universe) > 2:
-        if not count:
-            idealcount = int(math.ceil(math.log10(len(universe))))
-            count = max(2, idealcount)
-        samplespace = universe.keys()
-        if me.getMe().getUid() in samplespace:
-            samplespace.remove(me.getMe().getUid())
-        toReturn = random.sample(samplespace, count)
-        return set(toReturn)
-    else:
-        return set([])
-
+    return neighborStrategy.getNeighbors()
 
 def connectToNeighbors():
     """
@@ -347,11 +305,10 @@ def deadNode(uid):
     """
     Remove a node from the neighbors.
     """
-    global neighbors
     global universe
     try:
         lookupNode(uid).destroyTCPConnection()
-        neighbors.remove(uid)
+        neighborStrategy.removeNeighbor(uid)
         universe.remove(uid)
     finally:
         knownDead.add(uid)

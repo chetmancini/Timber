@@ -34,7 +34,7 @@ DEFAULT_SIMULATION_DELAY = 60
 DEFAULT_RETRY_DELAY = 120
 DEFAULT_RETRY_ATTEMPTS = 10
 DEFAULT_MAX_DISPLAY = 40
-DEFAULT_GOSSIP_WAIT_SECONDS = 10
+DEFAULT_GOSSIP_WAIT_SECONDS = 5
 """
 Gossip settings
 """
@@ -51,6 +51,11 @@ QUEUE_PORT = 5672
 Queue connection information.
 Provider choices:
 'RabbitMQ' | 'SQS'
+"""
+
+GOSSIP_NEIGHBOR_STRATEGY = "random"
+"""
+default | random | all | single | logarithmic | constant
 """
 
 GOSSIPTTL = 10
@@ -70,10 +75,7 @@ MONGO_DB_PASSWORD = "timber360"
 MongoDB login information
 """
 
-
-"""
-Hostname of the Mongo server/cluster. Default: localhost
-"""
+STATS_REFRESH_INTERVAL = 5
 
 MONGO_DB_LOG_COLLECTION = "timber_log"
 

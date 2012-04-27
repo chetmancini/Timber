@@ -31,6 +31,7 @@ import connections
 import message
 import aggregation
 import membership
+import message_queue
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
 
@@ -163,6 +164,9 @@ class GossipServerFactory(ServerFactory):
         self.membersLoop = task.LoopingCall(connections.maintainMembers)
         self.membersLoop.start(membership.getRandomWaitTimeSecs(), True)
 
+        self.aggregationLoop = task.LoopingCall(aggregation.refreshAll)
+        self.aggregationLoop.start(config.STATS_REFRESH_INTERVAL, False)
+
         debug("Gossip Server Factory created!", success=True)
 
 
@@ -267,12 +271,11 @@ class GossipClientFactory(ReconnectingClientFactory):
         recipients = connections.getNeighbors()
 
         if len(recipients) > 0:
-            debug("I am now gossiping with:", info=True)
+            shortids = []
             for uid in recipients:
-                externalnode = connections.lookupNode(uid)
-                debug("-----[ " + externalnode.getShortUid() + " ]" + \
-                    "--" + str(externalnode.getIp()) + ":" + \
-                    str(externalnode.getPort()), info=True)
+                shortids.append(connections.lookupNode(uid).getShortUid())
+            debug("Gossipping with: [ " + " ][ ".join(shortids) + " ]", 
+                info=True)
         else:
             debug("No neighbors to gossip with this interval.", error=True)
             return

@@ -1,12 +1,27 @@
 <config>
   <service name="timber">
-    <listen ip="127.0.0.1:8090"></listen>
-    <group name="timbergroup" scheduler="roundr" enable="true">
-      <host name="host1" ip="127.0.0.1:8081" weight="5"></host>
-      <host name="host2" ip="127.0.0.1:8082" weight="5"></host>
-      <host name="host3" ip="127.0.0.1:8083" weight="5"></host>
-      <host name="host4" ip="127.0.0.1:8084" weight="5"></host>
-      <host name="host5" ip="127.0.0.1:8085" weight="5"></host>
+    <listen ip="127.0.0.1:8101"></listen>
+    <group name="timbergroup" scheduler="rand" enable="true">
+      <host name="host01" ip="127.0.0.1:8081" weight="5"></host>
+      <host name="host02" ip="127.0.0.1:8082" weight="5"></host>
+      <host name="host03" ip="127.0.0.1:8083" weight="5"></host>
+      <host name="host04" ip="127.0.0.1:8084" weight="5"></host>
+      <host name="host05" ip="127.0.0.1:8085" weight="5"></host>
+      <host name="host06" ip="127.0.0.1:8086" weight="5"></host>
+      <host name="host07" ip="127.0.0.1:8087" weight="5"></host>
+      <host name="host08" ip="127.0.0.1:8088" weight="5"></host>
+      <host name="host09" ip="127.0.0.1:8089" weight="5"></host>
+      <host name="host10" ip="127.0.0.1:8090" weight="5"></host>
+      <host name="host11" ip="127.0.0.1:8091" weight="5"></host>
+      <host name="host12" ip="127.0.0.1:8092" weight="5"></host>
+      <host name="host13" ip="127.0.0.1:8093" weight="5"></host>
+      <host name="host14" ip="127.0.0.1:8094" weight="5"></host>
+      <host name="host15" ip="127.0.0.1:8095" weight="5"></host>
+      <host name="host16" ip="127.0.0.1:8096" weight="5"></host>
+      <host name="host17" ip="127.0.0.1:8097" weight="5"></host>
+      <host name="host18" ip="127.0.0.1:8098" weight="5"></host>
+      <host name="host19" ip="127.0.0.1:8099" weight="5"></host>
+      <host name="host20" ip="127.0.0.1:8100" weight="5"></host>
     </group>
   </service>
 

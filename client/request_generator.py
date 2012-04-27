@@ -19,7 +19,7 @@ import argparse
 
 ### Parameters ###############################################################
 IPADDRESS = "127.0.0.1"
-PORT = 80
+PORT = 8090
 TIMEOUT = 10
 COUNT = 100000
 NUM_PROCESS = 10

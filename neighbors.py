@@ -34,7 +34,8 @@ class BaseNeighborStrategy(object):
         """
         Constructor
         """
-        pass
+        self.neighborSet = set([])
+        self.removedSet = set([])
 
     def getNeighbors(self):
         """
@@ -42,11 +43,46 @@ class BaseNeighborStrategy(object):
         """
         pass
 
+    def removeNeighbor(self, uid):
+        self.removedSet.add(uid)
+        if uid in self.neighborSet:
+            self.neighborSet.remove(uid)
+        return self.neighborSet
+
+    def isNeighbor(self, uid):
+        return uid in self.neighborSet
+
     def _universeUids(self):
         """
         Helper method to get uids.
         """
         return sorted(connections.universe.keys())
+
+class DefaultNeighborStrategy(BaseNeighborStrategy):
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        super(DefaultNeighborStrategy, self).__init__()
+
+    def getNeighbors(self):
+        """
+        Get Neighbors
+        """
+        unilength = len(_universeUids())
+        if unilength > 2:
+            if not count:
+                idealcount = int(math.ceil(math.log10(unilength)))
+                count = max(2, idealcount)
+            samplespace = _universeUids()
+            if me.getUid() in samplespace:
+                samplespace.remove(me.getMe().getUid())
+            self.neighborSet = random.sample(samplespace, count)
+            return set(self.neighborSet)
+        else:
+            return set([])
+
 
 class RandomNeighborStrategy(BaseNeighborStrategy):
     """
@@ -83,7 +119,8 @@ class AllNeighborStrategoy(BaseNeighborStrategy):
         """
         Get all neighbors
         """
-        return connections.universe.keys()
+        self.neighborSet = self._universeUids()
+        return self.neighborSet()
 
 class SingleNeighborStrategy(BaseNeighborStrategy):
     """
@@ -103,9 +140,10 @@ class SingleNeighborStrategy(BaseNeighborStrategy):
         sortedkeys = self._universeUids()
         ix = sortedkeys.index(me.getUid())
         if ix == (len(sortedkeys)-1):
-            return sortedkeys[0]
+            self.neighborSet = sortedkeys[0]
         else:
-            return sortedkeys[ix+1]
+            self.neighborSet = sortedkeys[ix+1]
+        return self.neighborSet
 
 class LogarithmicNeighborStrategy(BaseNeighborStrategy):
     """
@@ -138,10 +176,30 @@ class ConstantNeighborStrategy(BaseNeighborStrategy):
         """
         super(ConstantNeighborStrategy, self).__init()
         self._count = count
-        self._neighbors = set([])
+        self.neighborSet = set([])
 
     def getNeighbors(self):
         """
         Get constant set of neighbors
         """
+        return None
+
+### Functions ################################################################
+def neighborStrategyFactory(name):
+    """
+    Factory method.
+    """
+    if name == "default":
+        return RandomNeighborStrategy()
+    elif name == "random":
+        return RandomNeighborStrategy()
+    elif name == "all":
+        return AllNeighborStrategoy()
+    elif name == "single":
+        return SingleNeighborStrategy()
+    elif name == "logarithmic":
+        return LogarithmicNeighborStrategy()
+    elif name == "constant":
+        return ConstantNeighborStrategy()
+    else:
         return None

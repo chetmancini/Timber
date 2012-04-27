@@ -3,13 +3,13 @@ TODO
 
 ## Sister Applications
 
-* Load Balancer
-* Weight tester / Timber polling
-* Storage Layer (make sure no blocking)
-* Polling app
-* Dead node/New node process.
-* Neighbor selection.
-
+x Load Balancer  									DONE?
+* Weight tester / Timber polling 					Needs work. Show size of vertex.
+x Storage Layer (make sure no blocking) 			DONE?
+* Polling app 										Almost done
+* Dead node/New node process. 						Needs a lot of work.
+x Neighbor selection. 								Done
+x Add looping call for aggregation all.  			DONE
 
 Future Improvments
 ==========================================

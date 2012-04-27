@@ -1,5 +1,4 @@
 ##############################################################################
-#                                                                            #
 #  .___________. __  .___  ___. .______    _______ .______                   #
 #  |           ||  | |   \/   | |   _  \  |   ____||   _  \                  #
 #  `---|  |----`|  | |  \  /  | |  |_)  | |  |__   |  |_)  |                 #
@@ -7,23 +6,67 @@
 #      |  |     |  | |  |  |  | |  |_)  | |  |____ |  |\  \----.             #
 #      |__|     |__| |__|  |__| |______/  |_______|| _| `._____|             #
 #                                                                            #
-#----------------------------------------------------------------------------#
-# logger.py                                                                  #
-# contains adaptor logic for logging data                                    #
 ##############################################################################
 
 ### Imports ##################################################################
 # Local Imports
-import messagequeue
+import message_queue
 from debug import debug
 
 ### Constants ################################################################
 USE_QUEUE = False
+THREAD_SLEEP_INTERVAL = 1
 
 ### Variables ################################################################
 connection = None
 channel = None
 logcount = 0
+
+### Classes ##################################################################
+class ThreadWorker(threading.Thread):
+    """
+    Threadworker
+    """
+
+    def __init__(self, callable, *args, **kwargs):
+        """
+        Constructor
+        """
+        super(ThreadWorker, self).__init__()
+        self.callable = callable
+        self.args = args
+        self.kwargs = kwargs
+        self.setDaemon(True)
+
+    def run(self):
+        """
+        Run the thread.
+        """
+        try:
+            self.callable(*self.args, **self.kwargs)
+        except Exception, e:
+            print e
+
+def queueOutput():
+    """
+    grab items off the queue
+    """
+    while True:
+        msg = message_queue.queue.get(True)
+        if msg:
+            logMessage(msg)
+        else:
+            break
+
+
+def loggerInit():
+    """
+    Start the logging thread.
+    """
+    worker = ThreadWorker(queueOutput)
+    worker.start()
+
+
 
 ### Functions ################################################################
 def logMessage(message):
@@ -45,7 +88,7 @@ def logMessage(message):
         if channel == None:
             channel = getChannel(connection)
 
-        messagequeue.producter_pushText(channel, message)
+        message_queue.producter_pushText(channel, message)
     else:
         if (message.getCode() != "EL") or (message.getCode() != "IL"):
 

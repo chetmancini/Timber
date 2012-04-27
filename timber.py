@@ -1,5 +1,4 @@
 ##############################################################################
-#                                                                            #
 #  .___________. __  .___  ___. .______    _______ .______                   #
 #  |           ||  | |   \/   | |   _  \  |   ____||   _  \                  #
 #  `---|  |----`|  | |  \  /  | |  |_)  | |  |__   |  |_)  |                 #
@@ -7,6 +6,8 @@
 #      |  |     |  | |  |  |  | |  |_)  | |  |____ |  |\  \----.             #
 #      |__|     |__| |__|  |__| |______/  |_______|| _| `._____|             #
 #                                                                            #
+##############################################################################
+
 #----------------------------------------------------------------------------#
 #   Name:       Timber                                                       #
 #   Description: A cloud based logging/analytics system                      #
@@ -20,10 +21,6 @@
 #                                                                            #
 #   Dependencies: RabbitMQ, MongoDB                                          #
 #----------------------------------------------------------------------------#
-#   Installation Instructions:                                               #
-#       Lorem ipsum                                                          #
-#                                                                            #
-##############################################################################
 
 ### Imports ##################################################################
 #   Python Standard Library
@@ -114,18 +111,8 @@ class TimberLoggingResource(resource.Resource):
         description += "'type': STRING}"
         return description
 
+    """
     def render_POST(self, request):
-        """
-        Receive POST request on the logger. This is the main logging api.
-
-        JSON Format:
-        {
-            'level': INTEGER
-            'message': STRING
-            'type': STRING
-        }
-        
-        """
         requestDict = request.__dict__
         requestArgs = request.args
         #content = request.content.getvalue() ? not sure if this is right.
@@ -142,6 +129,27 @@ class TimberLoggingResource(resource.Resource):
             debug('Problem logging', error=True)
             return "There was a problem logging the message"
         return "Message Logged!"
+    """
+
+    def render_POST(self, request):
+        """
+        Handle post request
+        """
+        args = request.args
+        logMessage = args['message'][0] if 'message' in args else None
+        logLevel = args['level'][0] if 'level' in args else None
+        logType = args['type'][0] if 'type' in args else None
+        try:
+            if logMessage:
+                msg = message.ExternalLogMessage(logMessage, logLevel, logType)
+                message_queue.queue.put_nowait(msg)
+                return "Success"
+            else:
+                return "Null message"
+        except:
+            debug('Problem logging', error=True)
+            return "Error"
+
 
 
 class TimberStatsResource(resource.Resource):
@@ -156,16 +164,25 @@ class TimberStatsResource(resource.Resource):
         debug("Recevied GET on stat resouce")
         requestDict = request.__dict__
         requestArgs = request.args
-        rawcontent = request.content.read()
-        content = json.loads(rawcontent)
-        try:
-            name = content['stat']
-            toReturn = aggregation.getAggregation(name)
-            return json.dumps(toReturn)
-            debug("Sent back stat " + name, success=True)
-        except Exception as e:
-            debug("Could not return Stat. Assuming help.", error=True)
-            return "'" + "' | '".join(aggregation.STATISTICS.keys()) + "'"
+
+        if 'name' in requestArgs:
+            name = requestArgs['name'][0]
+            if name == 'all':
+                aggDict = {}
+                for name in aggregation.STATISTICS:
+                    aggDict[name] = aggregation.getAggregation(name)
+                return json.dumps(aggDict)
+            elif name in aggregation.STATISTICS:
+                aggDict = aggregation.getAggregation(name)
+                debug("Sent Stat response for " + name, 
+                    success=True)
+                return json.dumps(aggDict)
+            else:
+                return "Not a valid statistic name. Try: '" + \
+                    + "' | '".join(aggregation.STATISTICS.keys()) + "'"
+        else:
+            return "Set a 'stat' GET parameter to: '" \
+            + "' | '".join(aggregation.STATISTICS.keys()) + "'"
 
     def render_POST(self, request):
         """
