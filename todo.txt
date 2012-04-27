@@ -6,7 +6,7 @@ TODO
 x Load Balancer  									DONE?
 * Weight tester / Timber polling 					Needs work. Show size of vertex.
 x Storage Layer (make sure no blocking) 			DONE?
-* Polling app 										Almost done
+X Polling app 										Done
 * Dead node/New node process. 						Needs a lot of work.
 x Neighbor selection. 								Done
 x Add looping call for aggregation all.  			DONE

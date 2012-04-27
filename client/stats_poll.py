@@ -1,5 +1,4 @@
 ##############################################################################
-#                                                                            #
 #  .___________. __  .___  ___. .______    _______ .______                   #
 #  |           ||  | |   \/   | |   _  \  |   ____||   _  \                  #
 #  `---|  |----`|  | |  \  /  | |  |_)  | |  |__   |  |_)  |                 #
@@ -7,22 +6,17 @@
 #      |  |     |  | |  |  |  | |  |_)  | |  |____ |  |\  \----.             #
 #      |__|     |__| |__|  |__| |______/  |_______|| _| `._____|             #
 #                                                                            #
-#----------------------------------------------------------------------------#
-# request_generator.py                                                       #
 ##############################################################################
 
-### Imports ##################################################################
-import httplib, urllib
-import multiprocessing
-import threading
-import argparse
+#----------------------------------------------------------------------------#
+# stats_poll.py                                                              #
+#----------------------------------------------------------------------------#
 
-### Parameters ###############################################################
-IPADDRESS = "127.0.0.1"
-PORT = 8090
-TIMEOUT = 10
-COUNT = 100000
-NUM_PROCESS = 10
+### Imports ##################################################################
+import httplib
+import urllib2
+import argparse
+import time
 
 ### Classes ##################################################################
 class Args(object):
@@ -38,23 +32,18 @@ def parse_args():
     """
     arguments = Args()
     parser = argparse.ArgumentParser(
-        description="------------Timber/Hiss Settings ----------------",
-        epilog="-------------------------------------------------")
+        description="------------Stat Poll Settings ----------------",
+        epilog="------------------------------------------------")
 
     parser.add_argument('--stat',
         default='all',
-        type=str.
+        type=str,
         help='which statistic to poll')
 
     parser.add_argument('--infinity', 
-        default=True, 
+        default=False, 
         type=bool, 
         help='Run forever')
-
-    parser.add_argument('--delay',
-        default=10,
-        type=int,
-        help='time between requests')
 
     parser.add_argument('--host',
         default='127.0.0.1',
@@ -62,49 +51,46 @@ def parse_args():
         help='host address')
 
     parser.add_argument('--port',
-        default='8080',
+        default='8101',
         type=int,
         help='host port')
+
+    parser.add_argument('--interval',
+        default=10,
+        type=int,
+        help='the interval to poll for statistics')
 
     parser.parse_args(namespace=arguments)
     return arguments
 
-def executeRequest(connection):
-	params = {
-		'@number': 12524, 
-		'@type': 'issue', 
-		'@action': 'show'
-		}
-	headers = {
-		"Content-type": "application/x-www-form-urlencoded", 
-		"Accept": "text/plain"
-		}
-	connection.request("POST", "", urllib.urlencode(params), headers)
-	response = connection.getresponse()
-	print "Status",response.status,"Reason",
-		response.reason,"Data",response.read()
+def buildUrl(host, port, stat):
+    """
+    Construct a url
+    """
+    return "".join(["http://", host, ":", str(port), "/stat?name=", stat])
 
-def createConnection():
-	return httplib.HTTPConnection(IPADDRESS, PORT, timeout=TIMEOUT)
+def request(url):
+    """
+    Make a request
+    """
+    try:
+        with urllib2.urlopen(url) as f:
+            print f.read()
+            f.close()
+    except Exception as e:
+        print e
 
-def threadExecute():
-	with createConnection() as connection:
-		connection = createConnection()
-		for i in range(COUNT):
-			executeRequest(connection)
-		connection.close()
 
 ### Main #####################################################################
 if __name__ == "__main__":
-	"""
-	Main function to run
-	"""
-	pool = multiprocessing.Pool(None)
-	threads = []
+    """
+    Main function to run
+    """
+    args = parse_args()
 
-	for i in range(NUM_PROCESS):
-		nextthread = threading.Thread(
-			None, threadExecute, "thread"+str(i), (), {})
-		threads.append(nextthread)
-		nextthread.start()
-
+    if args.infinity:
+        while True:
+            request(buildUrl(args.host, args.port, args.stat))
+            time.sleep(args.interval)
+    else:
+        request(buildUrl(args.host, args.port, args.stat))
