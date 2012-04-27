@@ -200,6 +200,13 @@ class GossipServerFactory(ServerFactory):
         """
         pass
 
+    def membersRefreshDone(self):
+        """
+        Quit the members refresh operation.
+        """
+        self.membersLoop.stop()
+        debug("Members Refresh Operation Ceased. Universe Stable.", info=True)
+
 
 class GossipClientFactory(ReconnectingClientFactory):
     """
@@ -371,6 +378,11 @@ def gossipPrepare():
     else:
         return None
 
+def quitMembersRefresh():
+    """
+    End members refresh operation and rely on gossip for rest
+    """
+    gossipServerFactory.membersRefreshDone()
 
 ### Main #####################################################################
 if __name__ == "__main__":

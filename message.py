@@ -293,7 +293,8 @@ class NetworkStatusMessage(GenericMessage):
         """
         Parent for any message.
         """
-        return msg.getCode() in ['S', 'A', 'D', 'G', 'AG', 'M']
+        return msg.getCode() in [
+            'S', 'A', 'D', 'G', 'AG', 'M', 'U', 'NRQ', 'NRS']
 
 
 class IsAliveMessage(NetworkStatusMessage):
@@ -358,6 +359,55 @@ class MeMessage(NetworkStatusMessage):
         """
         return msg.getCode() == 'M'
 
+class NodeRequestMessage(NetworkStatusMessage):
+    """
+    Ask for node information
+    """
+    
+    def __init__(self, uid, sender=None, recipients=None):
+        """
+        Constructor
+        """
+        super(NodeRequestMessage, self).__init__(uid, sender, recipients)
+        self._code = 'NRQ'
+
+    def respond(self):
+        """
+        Repond to a node request message
+        """
+        response = NodeResponseMessage()
+        pass
+        # TODO fill in.
+
+    @staticmethod
+    def isNodeRequestMessage(msg):
+        return msg.getCode() == 'NRQ'
+
+
+
+class NodeResponseMessage(NetworkStatusMessage):
+    """
+    Repond to a Node Request. Contains Node Data
+    """
+
+    def __init__(self, node, sender=None, recipients=None):
+        """
+        Constructor
+        """
+        super(NodeResponseMessage, self).__init__(node, sender, recipients)
+        self._code = 'NRS'
+
+    def respond(self):
+        """
+        Respond to a Node Response Message. Assign to self!
+        """
+        try:
+            uid = self._payload.getUid()
+            if uid not in connections.universe:
+                connections.universe[uid] = self._payload
+        except:
+            pass
+
 
 class GossipNetworkStatusMessage(NetworkStatusMessage):
     """
@@ -401,7 +451,37 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
         """
         Return if this is any type of GossipNetworkStatusMessage
         """
-        return msg.getCode() in ['G', 'D', 'N']
+        return msg.getCode() in ['G', 'D', 'N', 'U']
+
+
+class UniverseMessage(GossipNetworkStatusMessage):
+    """
+    Tell others about all the UIDs in the system.
+    """
+
+    def __init__(self, unikeys, sender=None, recipients=None):
+        """
+        Constructor
+        """
+        super(UniverseMessage, self).__init__(unikeys, sender, recipients)
+        self._code = 'U'
+
+    def respond(self):
+        """
+        Respond to a universe message.
+        """
+        # Compare with my vector clock.
+        # If newer, add keys > None
+        # Send info messages
+        # Put in newer vector clock.
+        super.respond()
+
+    @staticmethod
+    def isUniverseMessae(msg):
+        """
+        Is this message a universe message
+        """
+        return msg.getCode() == 'U'
 
 
 class DeadNodeMessage(GossipNetworkStatusMessage):

@@ -314,7 +314,7 @@ class UpdateAggregator(NamedAggregator):
     def getVectorClock(self):
         """
         Get the vector clock
-        """Looping
+        """
         return self._vectorClock
 
     def setVectorClock(self, vectorClock):

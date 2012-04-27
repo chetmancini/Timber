@@ -117,6 +117,9 @@ def countLinesOfCode(path=".", extension='py'):
                     if len(l) > 80:
                         print "line " + str(i) + " of " \
                             + fname + " is too long."
+                    if l.find("TODO") > -1 and fname != 'debug.py':
+                        print "line " + str(i) + " of " \
+                            + fname + " has a todo: " + l
             subtotal = i + 1
             print string.rjust(fname, 25) + "\t" + str(subtotal)
             total += subtotal

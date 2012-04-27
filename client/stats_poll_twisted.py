@@ -82,9 +82,11 @@ def poll(name, host='127.0.0.1', port=8090):
     d = agent.request(
         'GET',
         'http://' + host + ":" + str(port) + "/stat?name=" + name,
-        twisted.web.http_headers.Headers({'User-Agent': ['Twisted Web Client Example'],
-                 'Content-Type': ['text/json']}),
-        data)
+        twisted.web.http_headers.Headers(
+            {'User-Agent': ['Twisted Web Client Example'],
+             'Content-Type': ['text/json']
+             }),
+            data)
 
     def cbShutdown(ignored):
         twisted.internet.reactor.stop()
@@ -97,9 +99,11 @@ def poll(name, host='127.0.0.1', port=8090):
         d = agent.request(
             'GET',
             'http://' + host + ":" + str(port) + "/stat",
-            twisted.web.http_headers.Headers({'User-Agent': ['Twisted Web Client Example'],
-                     'Content-Type': ['text/json']}),
-            data)
+            twisted.web.http_headers.Headers(
+                {'User-Agent': ['Twisted Web Client Example'],
+                'Content-Type': ['text/json']
+                }),
+                data)
         d.addCallback(cbResponse)
         d.addBoth(cbShutdown)
         

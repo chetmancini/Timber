@@ -16,6 +16,7 @@
 import random
 import sys
 import traceback
+import copy
 
 # External library imports
 
@@ -67,6 +68,7 @@ def membersRefresh():
     global members
 
     try:
+        oldKeys = set(members.keys())
         for key in members:
             members_to_delete.add(key)
         members.clear()
@@ -78,7 +80,7 @@ def membersRefresh():
                 if len(memberUid) > 6:
                     memberNode = nodes.buildNode(newMembersDict[memberUid])
                     if not me.getMe().__eq__(memberNode):
-                        result = True #Really should send a noop.
+                        result = True # TODO Really should send a noop.
                         if result:
                             members[memberNode.getUid()] = memberNode
                         else:
@@ -94,6 +96,10 @@ def membersRefresh():
         debug("Members refresh procedure ran.", success=True)
         debug("There are " + str(len(members)) + " members in the system.", 
             info=True)
+
+        if set(members.keys()) == oldKeys:
+            """ We have reached stable state """
+            gossip.quitMembersRefresh()
     except Exception as e:
         debug(e)
         traceback.print_exc(file=sys.stdout)
