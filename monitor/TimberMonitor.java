@@ -268,8 +268,9 @@ public class TimberMonitor {
             while (running) {
                 Graph<String, String> graph = getGraph();
                 BasicVisualizationServer<String, String> vv = getViewer(graph);
-                frame.getContentPane().removeAll();
-                frame.getContentPane().add(vv);
+		Container content = frame.getContentPane();
+                content.removeAll();
+                content.add(vv);
                 frame.pack();
                 
                 try {
