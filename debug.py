@@ -139,7 +139,7 @@ if __name__ == "__main__":
     import timber_exceptions
     import vectorClock
     import message
-    import messagequeue
+    import message_queue
     import membership
     import neighbors
     import simpledb
