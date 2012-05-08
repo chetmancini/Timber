@@ -13,7 +13,7 @@
 #----------------------------------------------------------------------------#
 
 ### Imports ##################################################################
-
+import sys
 import subprocess
 
 
@@ -28,19 +28,22 @@ def doExit():
     """
     Exit the applicaiton
     """
-    exit()
+    print "Exiting"
+    sys.exit()
 
 def doKill():
     """
     Kill a node in the demo app (watches for kill file)
     """
     subprocess.call('touch kill')
+    print "Executing kill node request to demo app."
 
 def doNew():
     """
     Create a node in the demo app (watches for new file)
     """
     subprocess.call('touch new')
+    print "Executing new node request to demo app"
 
 ### Main #####################################################################
 if __name__ == "__main__":

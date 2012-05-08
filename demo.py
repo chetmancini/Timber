@@ -380,7 +380,15 @@ if __name__ == "__main__":
         else:
             handleLine(line, monitor=args.monitor)
 
+        """
+        Handle killing and creating nodes on the fly
+        through the controller.
+        """
         if fileexists('kill'):
+            subprocess.call('rm kill')
             killProcess()
+            
         elif fileexists('new'):
+            subprocess.call('rm new')
             newProcess()
+            

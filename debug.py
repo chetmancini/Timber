@@ -148,6 +148,7 @@ if __name__ == "__main__":
     import connections
     import aggregation
     import demo
+    import controller
 
 
     py = countLinesOfCode('.', 'py')
