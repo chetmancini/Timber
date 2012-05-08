@@ -85,6 +85,7 @@ class INamedAggregator(zope.interface.Interface):
 ### Classes ##################################################################
 class Aggregator(object):
     """
+    AGGREGATOR. ABSTRACT CLASS
     ValueAggegation. Do not instanciate
     """
 
@@ -147,6 +148,7 @@ class Aggregator(object):
 
 class NamedAggregator(Aggregator):
     """
+    NAMED AGGREGATOR (SUPER CLASS)
     An aggregator with a name
     """
     zope.interface.implements(INamedAggregator)
@@ -172,9 +174,41 @@ class NamedAggregator(Aggregator):
         toReturn['name'] = self._name
         return toReturn
 
+class AverageAggregator(NamedAggregator):
+    """
+    AVERAGE AGGREGATOR
+    Aggregator that keeps an average of a value.
+    """
+
+    def __init__(self, name, statistic=None):
+        """
+        Constructor
+        """
+        super(AverageAggregator, self).__init(name, statistic)
+
+    def reduce(self, other):
+        """
+        Reduce from a received message.
+        """
+        pass
+
+class SumAggregator(NamedAggregator):
+
+    def __init__(self, name, statistic=None):
+        """
+        Constructor
+        """
+
+    def reduce(self, other):
+        """
+        recduce from a received message
+        """
+        pass
+
 
 class MinAggregator(NamedAggregator):
     """
+    MINIMUM AGGREGATOR
     Aggregator that keeps a reference to the minimum
     """
 
@@ -200,6 +234,7 @@ class MinAggregator(NamedAggregator):
 
 class MaxAggregator(NamedAggregator):
     """
+    MAXIMUM AGGREGATOR
     Aggregator that keeps a reference to the maximum value.
     """
 
@@ -282,16 +317,98 @@ class MinMaxAggregator(object):
         return None
 
     def getStatistic(self):
-        toReturn = {}
-        toReturn['min'] = self.getMinAggregator().getStatistic()
-        toReturn['min'] = self.getMaxAggregator().getStatistic()
-        return toReturn
+        ret = {}
+        ret['min'] = self.getMinAggregator().getStatistic()
+        ret['min'] = self.getMaxAggregator().getStatistic()
+        return ret
 
     def localValue(self):
         """
         Return the statistic local to this node.
         """
         return self._statistic_function()
+
+
+class MinMaxAverageAggregator(MinMaxAggregator):
+    """
+    Larger aggregator that measures Min, Max, and Sum
+    """
+    def __init__(self, name, statistic):
+        """
+        Constructor
+        """
+        super(MinMaxAverageAggregator, self).__init__(name, statistic)
+        self._average = AverageAggregator(name, statistic)
+
+    def getAverageAggregator(self):
+        """
+        Get the aggregator for the average
+        """
+        return self._average
+
+    def reduce(self, other):
+        """
+        Combine the two.
+        """
+        assert other.__class__.__name__ == "MinMaxAverageAggregator"
+        super.reduce(other)
+        self._avg.reduce(other.getAverageAggregator())
+
+    def refresh(self):
+        """
+        Refresh from the local system
+        """
+        super.refresh()
+        self._average.refresh()
+
+    def getStatistic(self):
+        """
+        Get the full statistic for thsi aggregator
+        """
+        ret = super.getStatistic()
+        ret['avg'] = self.getAverageAggregator().getStatistic()
+        return ret
+
+class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
+    """
+    MINIMUM + MAXIMUM + AVERAGE + SUM
+    super aggregator that measures four different values.
+    """ 
+
+    def __init__(self, name, statistic):
+        """
+        Constructor
+        """
+        super(MinMaxAverageSumAggregator, self).__init__(name, statistic)
+        self._sum = SumAggregator(name, statistic)
+
+    def getSumAggregator(self):
+        """
+        Get the summation aggregator
+        """
+        return self._sum
+
+    def refresh(self):
+        """
+        Refresh from the local machine/sensor
+        """
+        super.refresh()
+        self._sum.refresh()
+
+    def reduce(self, other):
+        """
+        Reduce from a received message.
+        """
+        assert other.__class__.__name__ == "MinMaxAverageSumAggregator"
+        super.reduce(other)
+        self._sum.reduce(other.getSumAggregator())
+
+    def getStatistic(self):
+        """
+        Get the full statistic for this aggregator
+        """
+        ret = super.getStatistic()
+        ret['sum'] = self.getSumAggregator().getStatistic()
 
 
 class UpdateAggregator(NamedAggregator):
