@@ -14,6 +14,7 @@
 
 ### Imports ##################################################################
 # Python Library imports
+from __future__ import division
 import time
 import copy
 
@@ -23,6 +24,8 @@ import zope.interface
 
 # Local imports
 import me
+import config
+import connections
 import logger
 import stats
 
@@ -184,24 +187,48 @@ class AverageAggregator(NamedAggregator):
         """
         Constructor
         """
-        super(AverageAggregator, self).__init(name, statistic)
+        super(AverageAggregator, self).__init__(name, statistic)
+        self._interval = random.randint(
+            config.AGGREGATE_AVERAGE_REFRESH_MIN, 
+            config.AGGREGATE_AVERAGE_REFRESH_MAX)
+        self._counter = 0
+
+    def refresh(self):
+        """
+        Refresh on a certain interval.
+        """
+        self._counter += 1
+        if self._counter == self._interval:
+            self._value = self.getLocalValue()
+        else:
+            pass
 
     def reduce(self, other):
         """
         Reduce from a received message.
+        When we combine two the variance of the system converges
+        to zero.
         """
-        pass
+        if self.getName() == other.getName():
+            self._value = ((self.getValue() + other.getValue()) / 2)
+            return self.getValue()
+        else:
+            error = "Cannot reduce different aggregators: (" + self.getName()
+            error += ", " + other.getName() + ")"
+            raise error
 
 class SumAggregator(NamedAggregator):
 
     def __init__(self, name, statistic=None):
         """
         Constructor
+        This might be a little tricky since a SUM is really
+        just an average multiplied by the total node count.
         """
 
     def reduce(self, other):
         """
-        recduce from a received message
+        reduce from a received message
         """
         pass
 
@@ -380,20 +407,12 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         Constructor
         """
         super(MinMaxAverageSumAggregator, self).__init__(name, statistic)
-        self._sum = SumAggregator(name, statistic)
-
-    def getSumAggregator(self):
-        """
-        Get the summation aggregator
-        """
-        return self._sum
 
     def refresh(self):
         """
         Refresh from the local machine/sensor
         """
         super.refresh()
-        self._sum.refresh()
 
     def reduce(self, other):
         """
@@ -401,14 +420,16 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         """
         assert other.__class__.__name__ == "MinMaxAverageSumAggregator"
         super.reduce(other)
-        self._sum.reduce(other.getSumAggregator())
 
     def getStatistic(self):
         """
         Get the full statistic for this aggregator
         """
         ret = super.getStatistic()
-        ret['sum'] = self.getSumAggregator().getStatistic()
+        ret['sum'] = {}
+        ret['sum']['name'] = super.getAverageAggregator().getName()
+        ret['sum']['value'] = 
+            len(connections.universe)*super.getAverageAggregator().getValue()
 
 
 class UpdateAggregator(NamedAggregator):

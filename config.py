@@ -65,6 +65,12 @@ a message doesn't get stuck in system.
 Messages will be destroyed once they hit 0.
 """
 
+AGGREGATE_AVERAGE_REFRESH_MIN = 5
+AGGREGATE_AVERAGE_REFRESH_MAX = 10
+"""
+When to refresh from the local node.
+"""
+
 MONGO_DB_HOST = "staff.mongohq.com"
 MONGO_DB_PORT = 10005
 MONGO_DB_NAME = "timber"
