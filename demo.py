@@ -46,6 +46,8 @@ qmonitor = Queue()
 
 colordict = {}
 
+processes = []
+
 ### Classes ##################################################################
 class Args(object):
     """
@@ -248,6 +250,28 @@ def buildCommandArgs():
     toReturn.extend(['--sendport', str(getNextSendPort())])
     return toReturn
 
+def readWorker(pipe):
+    """
+    read worker.
+    """
+    while True:
+        line = pipe.readline()
+        if line == '':
+            break
+        else:
+            q.put_nowait(line.strip())
+
+def writeWorker(pipe):
+    """
+    write worker
+    """
+    while True:
+        line = qmonitor.get(True) #block
+        if line:
+            #print "FOUND:",line
+            pipe.write(line)
+            pipe.flush()
+
 def createProcess():
     """
     Create process and return it.
@@ -260,6 +284,31 @@ def createProcess():
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE)
     return process
+
+def killProcess():
+    """
+    Simulate destroying a process.
+    """ 
+    procDict = processes.pop()
+    procDict['stdout'].stop()
+    procDict['stderr'].stop()
+    procDict['proc'].kill()
+
+def newProcess():
+    """
+    Simulate creating a new process
+    """
+    proc = createProcess()
+    app = {}
+    stdout_worker = ThreadWorker(readWorker, proc.stdout)
+    stderr_worker = ThreadWorker(readWorker, proc.stderr)
+    stdout_worker.start()
+    stderr_worker.start()
+    app['proc'] = proc
+    app['stdout'] = stdout_worker
+    app['stderr'] = stderr_worker
+    processes.append(app)
+
 
 def parse_args():
     """
@@ -289,28 +338,6 @@ if __name__ == "__main__":
     """
     Run demo application.
     """
-    def readWorker(pipe):
-        """
-        read worker.
-        """
-        while True:
-            line = pipe.readline()
-            if line == '':
-                break
-            else:
-                q.put_nowait(line.strip())
-
-    def writeWorker(pipe):
-        """
-        write worker
-        """
-        while True:
-            line = qmonitor.get(True) #block
-            if line:
-                #print "FOUND:",line
-                pipe.write(line)
-                pipe.flush()
-
     nextLogPort = config.DEFAULT_LOG_PORT
     nextReceivePort = config.DEFAULT_RECEIVE_PORT
     nextSendPort = config.DEFAULT_SEND_PORT
@@ -332,7 +359,6 @@ if __name__ == "__main__":
         stdin_worker = ThreadWorker(writeWorker, proc.stdin)
         stdin_worker.start()
 
-    processes = []
     for i in range(args.count):
         next = {}
         proc = createProcess()
@@ -353,3 +379,8 @@ if __name__ == "__main__":
             pass
         else:
             handleLine(line, monitor=args.monitor)
+
+        if fileexists('kill'):
+            killProcess()
+        elif fileexists('new'):
+            newProcess()
