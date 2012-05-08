@@ -384,11 +384,10 @@ if __name__ == "__main__":
         Handle killing and creating nodes on the fly
         through the controller.
         """
-        if fileexists('kill'):
-            subprocess.call('rm kill')
-            killProcess()
-            
-        elif fileexists('new'):
-            subprocess.call('rm new')
+        if os.path.exists('./kill'):
+            os.unlink('kill')
+            killProcess()  
+        if os.path.exists('./new'):
+            os.unlink('new')
             newProcess()
             

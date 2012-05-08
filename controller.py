@@ -14,6 +14,7 @@
 
 ### Imports ##################################################################
 import sys
+import os
 import subprocess
 
 
@@ -35,14 +36,16 @@ def doKill():
     """
     Kill a node in the demo app (watches for kill file)
     """
-    subprocess.call('touch kill')
+    path = os.path.abspath('./kill')
+    open(path, 'w').close()
     print "Executing kill node request to demo app."
 
 def doNew():
     """
     Create a node in the demo app (watches for new file)
     """
-    subprocess.call('touch new')
+    path = os.path.abspath('./new')
+    open(path, 'w').close()
     print "Executing new node request to demo app"
 
 ### Main #####################################################################
@@ -53,7 +56,7 @@ if __name__ == "__main__":
 
         if inputstr == 'help':
             doHelp()
-        elif inputstr == 'kill'
+        elif inputstr == 'kill':
             doKill()
         elif inputstr == 'new':
             doNew()
