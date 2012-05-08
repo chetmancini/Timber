@@ -428,8 +428,8 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         ret = super.getStatistic()
         ret['sum'] = {}
         ret['sum']['name'] = super.getAverageAggregator().getName()
-        ret['sum']['value'] = 
-            len(connections.universe)*super.getAverageAggregator().getValue()
+        ret['sum']['value'] = len(connections.universe) \
+            * super.getAverageAggregator().getValue()
 
 
 class UpdateAggregator(NamedAggregator):
