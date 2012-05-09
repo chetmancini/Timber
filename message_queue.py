@@ -48,6 +48,23 @@ PERSISTENT = 2
 
 queue = Queue()
 
+
+def put(item):
+    global queue
+
+    if not queue:
+        queue = Queue()
+    
+    queue.put_nowait(item)
+
+    debug("size:" + str(queue.qsize()), info=True)
+
+def getQueue():
+    return queue
+
+
+
+
 ### Common Functions #########################################################
 @inlineCallbacks
 def getConnection(client):

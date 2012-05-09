@@ -7,8 +7,6 @@ TODO
 x Storage Layer (make sure no blocking) 			DONE?
 X Polling app 										Done
 
-Add Node
-Delete Node
 Edge Weights
 Vertext Weights
 Logging

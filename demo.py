@@ -152,6 +152,8 @@ def handleLine(line, header=False, monitor=False):
     """
     Handle receipt of line.
     """
+    if not line or len(line) == 0:
+        return
     isSuccess = line[0] == "*"
     isInfo = line[0] == "-"
     isStrange = line[0] == "?"
@@ -217,27 +219,27 @@ def getNextReceivePort():
     Get the next receive port
     """
     global nextReceivePort
-
+    ret = nextReceivePort
     nextReceivePort += 1
-    return nextReceivePort
+    return ret
 
 def getNextLogPort():
     """
     Get the next log port
     """
     global nextLogPort
-
+    ret = nextLogPort
     nextLogPort += 1
-    return nextLogPort
+    return ret
 
 def getNextSendPort():
     """
     Get the next send port
     """
     global nextSendPort
-
+    ret = nextSendPort
     nextSendPort += 1
-    return nextSendPort
+    return ret
 
 def buildCommandArgs():
     """
@@ -348,9 +350,9 @@ if __name__ == "__main__":
 
     if args.monitor:
         command = 'java -cp ' \
-            + '/home/chet/bin/Jung/jung-visualization-2.0.1.jar:' \
-            + '/home/chet/bin/collections-generic-4.01.jar:' \
-            + '/home/chet/bin/Jung/jung-graph-impl-2.0.1.jar:. ' \
+            + './lib/Jung/jung-visualization-2.0.1.jar:' \
+            + './lib/collections-generic-4.01.jar:' \
+            + './lib/Jung/jung-graph-impl-2.0.1.jar:. ' \
             + 'monitor.TimberMonitor'
         print "Running: ", command
         proc = subprocess.Popen(

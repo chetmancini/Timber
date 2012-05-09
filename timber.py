@@ -46,6 +46,8 @@ from twisted.python import components, log
 import config
 import me
 import stats
+import message
+import message_queue
 import aggregation
 from timber_exceptions import GeneralError, ConnectionError
 from debug import debug
@@ -135,19 +137,32 @@ class TimberLoggingResource(resource.Resource):
         """
         Handle post request
         """
+        """
         args = request.args
+        print args
         logMessage = args['message'][0] if 'message' in args else None
         logLevel = args['level'][0] if 'level' in args else None
         logType = args['type'][0] if 'type' in args else None
+        """
+        stringcontent = request.content.read()
+        if len(stringcontent) > 0:
+            debug("received: " + stringcontent, info=True)
+            
+        content = json.loads(stringcontent)
+
+        logMessage = content['message']
+        logLevel = content['level']
+        logType = content['type']
         try:
             if logMessage:
                 msg = message.ExternalLogMessage(logMessage, logLevel, logType)
-                message_queue.queue.put_nowait(msg)
+                me.getMe().getVectorClock().handleEvent(msg)
+                message_queue.put(msg)
                 return "Success"
             else:
                 return "Null message"
-        except:
-            debug('Problem logging', error=True)
+        except Exception as e:
+            debug(e, error=True)
             return "Error"
 
 

@@ -25,6 +25,7 @@ import pymongo.database
 import pymongo.collection
 
 # Local Imports
+import me
 import config
 from debug import debug
 
@@ -59,8 +60,11 @@ validation_data = mongoDatabase.validate_collection(
 
 debug("PyMongo validating database collection", info=True)
 
-database.create_collection(
-    config.MONGO_DB_LOG_COLLECTION)
+try:
+    mongoDatabase.create_collection(
+        config.MONGO_DB_LOG_COLLECTION)
+except:
+    pass
 
 debug("PyMongo could not find collection. Creating collection.", info=True)
 
@@ -126,7 +130,7 @@ def mongoCollectionInit():
 
             debug("PyMongo validating database collection", info=True)
 
-            database.create_collection(
+            mongoDatabase.create_collection(
                 config.MONGO_DB_LOG_COLLECTION)
 
             debug("PyMongo could not find collection. Creating collection.", 
@@ -176,19 +180,19 @@ def findMessages(searchDict):
     global mongoCollection
     return mongoCollection.find(searchDict)
 
-def log(typ, msg, ordered=True):
+def log(typ, msg, level, ordered=True):
     """
     Log a received piece of data from the api.
     Can be ordered or not. 
     """
     try:
-        item = {"type":typ,"message":msg,"time":time.time()}
+        item = {"type":typ,"message":msg,"level":level,"time":time.time()}
         if ordered:
-            item["machine"] = connections.me.getUid()
-            item["clock"] = connections.me.getVectorClock().getClocks()
+            item["machine"] = me.getUid()
+            item["clock"] = me.getMe().getVectorClock().getClocks()
         insert(item)
         debug("logged item", success=True)
-    except:
+    except Exception, e:
+        debug(e, error=True)
         debug("did not log message (ordered:" + str(ordered) + ")", error=True)
-          
-
+        

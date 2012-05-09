@@ -18,6 +18,7 @@ import multiprocessing
 import threading
 import argparse
 import time
+import json
 
 # External Library Imports
 import requests
@@ -58,7 +59,7 @@ def parse_args():
         help='host address')
 
     parser.add_argument('--port',
-        default='8101',
+        default='8121',
         type=int,
         help='host port')
 
@@ -85,29 +86,33 @@ def parse_args():
     parser.parse_args(namespace=arguments)
     return arguments
 
+def buildUrl(host, port):
+    """
+    Construct a url
+    """
+    return "".join(["http://", host, ":", str(port), "/logger"])
+
+
 def executeRequest():
+    """
+    Execute a request
+    """
     params = {
         'message': 'message I want to log', 
         'level': 5, 
         'type': 'info'
         }
-
-    response = connection.getresponse()
-
-
+    url = buildUrl(args.host, args.port)
+    r = requests.post(url, data=json.dumps(params)+"\n")
 
     if args.verbose:
-        print "Status",response.status
-        print "Reason",response.reason
-        print "Data",response.read()
+        print "Status",r.status_code
 
 def threadExecute():
     try:
-        connection = createConnection()
         for i in range(args.requests):
-            executeRequest(connection)
+            executeRequest()
             time.sleep(args.interval)
-        connection.close()
     except Exception as e:
         if args.verbose:
             print e
@@ -130,13 +135,7 @@ if __name__ == "__main__":
         nextthread.start()
         time.sleep(1)
 
-# url = 'https://api.github.com/some/endpoint'
-# payload = {'some': 'data'}
-
-# r = requests.post(url, data=json.dumps(payload))
-
-# r.status_code == requests.codes.ok
-
+"""
 {
     'status': '200 OK',
     'content-encoding': 'gzip',
@@ -147,3 +146,4 @@ if __name__ == "__main__":
     'etag': '"e1ca502697e5c9317743dc078f67693f"',
     'content-type': 'application/json; charset=utf-8'
 }
+"""

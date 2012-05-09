@@ -15,6 +15,7 @@ import time
 
 # Local Imports
 import message_queue
+import persist
 from debug import debug
 
 ### Constants ################################################################
@@ -25,6 +26,8 @@ THREAD_SLEEP_INTERVAL = 1
 connection = None
 channel = None
 logcount = 0
+
+worker = None
 
 ### Classes ##################################################################
 class ThreadWorker(threading.Thread):
@@ -56,21 +59,28 @@ def queueOutput():
     grab items off the queue
     """
     while True:
-        msg = message_queue.queue.get(True)
-        if msg:
-            logMessage(msg)
-        else:
-            break
+        try:
+            debug("Waiting", info=True)
+            msg = message_queue.queue.get(True, 5)
+            if msg:
+                debug("Received Message. Logging...",success=True)
+                logMessage(msg)
+            else:
+                time.sleep(3)
+                debug("Did not receive message. Sleeping",info=True)
+        except:
+            pass
 
 
 def loggerInit():
     """
     Start the logging thread.
     """
+    global worker
     worker = ThreadWorker(queueOutput)
     worker.start()
-
-
+    debug("Logger initialized", success=True)
+    return
 
 ### Functions ################################################################
 def logMessage(message):
@@ -84,8 +94,8 @@ def logMessage(message):
     if USE_QUEUE:
         if (message.getCode() != "EL") or (message.getCode() != "IL"):
 
-            debug("Invalid message" + message.getCode(), error=True)
-            raise "Invalid message"
+            debug("Invalid message " + message.getCode(), error=True)
+            raise "Invalid message "
 
         if connection == None:
             connection = getConnection(client)
@@ -94,19 +104,23 @@ def logMessage(message):
 
         message_queue.producter_pushText(channel, message)
     else:
-        if (message.getCode() != "EL") or (message.getCode() != "IL"):
+        if message.getCode() not in ["EL","IL"]:
 
-            debug("Invalid message" + message.getCode(), error=True)
-            raise "Invalid message"
+            debug("Invalid message " + message.getCode(), error=True)
+            raise "Invalid message "
 
     try:
-        persist.log(
-            message.getLevel(), 
-            message.getPayload(), 
-            True)
-
-        debug("Message logged", success=True)
-    except:
+        if len(message.getPayload()) > 1:
+            persist.log(
+                message.getType(),
+                message.getPayload(),
+                message.getLevel(),
+                True)
+            debug("Message logged", success=True)
+        else:
+            debug("Message empty", error=True)
+    except Exception,e:
+        debug(e)
         debug("Message not logged!", error=True)
 
     logcount += 1

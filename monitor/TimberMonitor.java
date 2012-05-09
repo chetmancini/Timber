@@ -88,6 +88,10 @@ public class TimberMonitor {
     public void mainloop(){
         while(true){
             String nextLine = scan.next();
+            if (nextLine.length() == 0){
+                continue;
+            }
+
             String[] arr = nextLine.split("#");
             //New node.
             if (arr[0].equals("New")){

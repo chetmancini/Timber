@@ -180,7 +180,7 @@ class NamedAggregator(Aggregator):
         """
         Get as a dictionary
         """
-        toReturn = super.getStatistic()
+        toReturn = super(NamedAggregator, self).getStatistic()
         toReturn['name'] = self._name
         return toReturn
 
@@ -385,21 +385,21 @@ class MinMaxAverageAggregator(MinMaxAggregator):
         Combine the two.
         """
         assert other.__class__.__name__ == "MinMaxAverageAggregator"
-        super.reduce(other)
+        super(MinMaxAverageAggregator, self).reduce(other)
         self._avg.reduce(other.getAverageAggregator())
 
     def refresh(self):
         """
         Refresh from the local system
         """
-        super.refresh()
+        super(MinMaxAverageAggregator, self).refresh()
         self._average.refresh()
 
     def getStatistic(self):
         """
         Get the full statistic for thsi aggregator
         """
-        ret = super.getStatistic()
+        ret = super(MinMaxAverageAggregator, self).getStatistic()
         ret['avg'] = self.getAverageAggregator().getStatistic()
         return ret
 
@@ -419,24 +419,26 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         """
         Refresh from the local machine/sensor
         """
-        super.refresh()
+        super(MinMaxAverageSumAggregator, self).refresh()
 
     def reduce(self, other):
         """
         Reduce from a received message.
         """
         assert other.__class__.__name__ == "MinMaxAverageSumAggregator"
-        super.reduce(other)
+        super(MinMaxAverageSumAggregator, self).reduce(other)
 
     def getStatistic(self):
         """
         Get the full statistic for this aggregator
         """
-        ret = super.getStatistic()
+        ret = super(MinMaxAverageSumAggregator, self).getStatistic()
         ret['sum'] = {}
-        ret['sum']['name'] = super.getAverageAggregator().getName()
+        ret['sum']['name'] = super(
+            MinMaxAverageSumAggregator, self).getAverageAggregator().getName()
         ret['sum']['value'] = len(connections.universe) \
-            * super.getAverageAggregator().getValue()
+            * super(
+                MinMaxAverageSumAggregator, self).getAverageAggregator().getValue()
 
 
 class UpdateAggregator(NamedAggregator):
