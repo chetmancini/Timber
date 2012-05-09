@@ -507,6 +507,7 @@ class DeadNodeMessage(GossipNetworkStatusMessage):
             if uid in connections.universe:
                 connections.removeNode(uid)
                 super.respond()
+                debug("Dead#"+uid, monitor=True)
             else:
                 pass #don't gossip if we've already gossipped this.
             debug("Responded to dead node message.", success=True)
@@ -538,9 +539,9 @@ class NewNodeMessage(GossipNetworkStatusMessage):
         How to respond to a new node message.
         """
         try:
-            (uid, ip) = self.getPayload()
-            if uid not in connections.universe: 
-                connections.createNode(uid, ip, connections.DEFAULT_SEND_PORT)
+            (uidObject, ip) = self.getPayload()
+            if uidObject.hex not in connections.universe: 
+                connections.createNode(uidObject, ip, connections.DEFAULT_SEND_PORT)
                 super.respond()
             else:
                 pass # don't need to gossip if we've already gossipped this.

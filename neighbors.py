@@ -8,8 +8,16 @@
 ##############################################################################
 
 ### Imports ##################################################################
+# Python Library Imports
+import random
+
+# External Library Imports
 import zope.interface
+
+# Local Imports
+import me
 import connections
+
 
 ### Interfaces ###############################################################
 class INeighborStrategy(zope.interface.Interface):
@@ -65,20 +73,21 @@ class DefaultNeighborStrategy(BaseNeighborStrategy):
         Constructor
         """
         super(DefaultNeighborStrategy, self).__init__()
+        self.count = 2
 
     def getNeighbors(self):
         """
         Get Neighbors
         """
-        unilength = len(_universeUids())
+        unilength = len(self._universeUids())
         if unilength > 2:
-            if not count:
+            if not self.count:
                 idealcount = int(math.ceil(math.log10(unilength)))
-                count = max(2, idealcount)
-            samplespace = _universeUids()
+                self.count = max(2, idealcount)
+            samplespace = self._universeUids()
             if me.getUid() in samplespace:
                 samplespace.remove(me.getMe().getUid())
-            self.neighborSet = random.sample(samplespace, count)
+            self.neighborSet = random.sample(samplespace, self.count)
             return set(self.neighborSet)
         else:
             return set([])
@@ -190,7 +199,7 @@ def neighborStrategyFactory(name):
     Factory method.
     """
     if name == "default":
-        return RandomNeighborStrategy()
+        return DefaultNeighborStrategy()
     elif name == "random":
         return RandomNeighborStrategy()
     elif name == "all":

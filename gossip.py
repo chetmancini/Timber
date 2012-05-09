@@ -338,10 +338,13 @@ def gossipClientConnect(host, port):
     """
     connect as a client. returns a connector
     """
-    connector = reactor.connectTCP(host, port, gossipClientFactory)
-    debug("Reactor is connecting to " + host + ":" + str(port), 
-        info=True)
-    return connector
+    try:
+        connector = reactor.connectTCP(host, port, gossipClientFactory)
+        debug("Reactor is connecting to " + host + ":" + str(port), 
+            info=True)
+        return connector
+    except:
+        debug("FAILED TO CONNECT", error=True)
 
 def gossipRun():
     """

@@ -349,6 +349,7 @@ if __name__ == "__main__":
     if args.monitor:
         command = 'java -cp ' \
             + '/home/chet/bin/Jung/jung-visualization-2.0.1.jar:' \
+            + '/home/chet/bin/collections-generic-4.01.jar:' \
             + '/home/chet/bin/Jung/jung-graph-impl-2.0.1.jar:. ' \
             + 'monitor.TimberMonitor'
         print "Running: ", command

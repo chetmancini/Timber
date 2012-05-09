@@ -2,6 +2,7 @@ package monitor;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.Stroke;
@@ -268,7 +269,7 @@ public class TimberMonitor {
             while (running) {
                 Graph<String, String> graph = getGraph();
                 BasicVisualizationServer<String, String> vv = getViewer(graph);
-		Container content = frame.getContentPane();
+		        Container content = frame.getContentPane();
                 content.removeAll();
                 content.add(vv);
                 frame.pack();

@@ -24,6 +24,8 @@ import copy
 import simpledb
 import me
 import nodes
+import gossip
+import connections
 from debug import debug
 
 ### Variables ################################################################
@@ -100,6 +102,8 @@ def membersRefresh():
         if set(members.keys()) == oldKeys:
             """ We have reached stable state """
             gossip.quitMembersRefresh()
+            connections.informAlive()
+            
     except Exception as e:
         debug(e)
         traceback.print_exc(file=sys.stdout)

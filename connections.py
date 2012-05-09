@@ -29,6 +29,7 @@ import gossip
 import message
 import nodes
 import membership
+import neighbors
 from debug import debug
 
 ### Classes ##################################################################
@@ -185,10 +186,15 @@ def init():
     Developer note: the advantage of putting it here is
     that me.py doesn't need to import anything.
     """
+    global neighborStrategy
+    
     me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
     debug("#".join(["New", me.getMe().getShortUid(), me.getUid()]), 
         monitor=True)
+
+    neighborStrategy = neighbors.neighborStrategyFactory(
+        config.GOSSIP_NEIGHBOR_STRATEGY)
 
 def maintainMembers():
     """
@@ -245,6 +251,11 @@ def getNeighbors():
     with the nearest nodes. Definitely an area for further design and 
     implementation.
     """
+    global neighborStrategy
+    if not neighborStrategy:
+        neighborStrategy = neighbors.neighborStrategyFactory(
+            config.GOSSIP_NEIGHBOR_STRATEGY)
+
     return neighborStrategy.getNeighbors()
 
 def connectToNeighbors():
@@ -277,11 +288,11 @@ def clientConnectionMade(client):
     #debug("connections.py: Connection has been made?", info=True)
     pass
 
-    """def createNode(uid, ip, port):
+def createNode(uid, ip, port=None):
     create = Node(ip, port, uid)
-    addNode(create)
+    universe[create.getUid()] = create
     knownalive.add(uid)
-    return create"""
+    return create
 
 def clientConnectionLost((host, port)):
     """
@@ -294,12 +305,24 @@ def clientConnectionLost((host, port)):
     """
 
 def assignTransport(uid, transport):
+    """
+    Assign a transport to a given UID.
+    """
     try:
         lookupNode(uid).setTCPConnection(transport)
     except KeyError as ke:
         pass
     except Exception as e:
         debug(e)
+
+def informAlive():
+    """
+    Inform my peers I exist (for new nodes to system)
+    """
+    alivemessage = message.NewNodeMessage((me.getMe().getUidAsObject(), me.getMe().getPort()))
+    alivemessage.send()
+    debug("Informing friends I am alive", info=True)
+
 
 def deadNode(uid):
     """
@@ -373,6 +396,5 @@ def globalReset():
     for uid in universe:
         deadNode(uid)
     universe = {}
-    neighbors = {}
     simpledb.deleteAll("members")
     init()

@@ -130,7 +130,7 @@ class Aggregator(object):
         """
         Refresh statistic from the current node to keep it updated.
         """
-        tojoin = Aggregator(self.getName(), self._statistic_function)
+        tojoin = Aggregator(self._statistic_function)
         self.reduce(tojoin)
 
     def getLocalValue(self):
@@ -162,6 +162,13 @@ class NamedAggregator(Aggregator):
         """
         super(NamedAggregator, self).__init__(statistic)
         self._name = name
+
+    def refresh(self):
+        """
+        Refresh statistic from the current node to keep it updated.
+        """
+        tojoin = NamedAggregator(self.getName(), self._statistic_function)
+        self.reduce(tojoin)
 
     def getName(self):
         """

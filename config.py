@@ -53,7 +53,7 @@ Provider choices:
 'RabbitMQ' | 'SQS'
 """
 
-GOSSIP_NEIGHBOR_STRATEGY = "random"
+GOSSIP_NEIGHBOR_STRATEGY = "default"
 """
 default | random | all | single | logarithmic | constant
 """

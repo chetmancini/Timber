@@ -130,7 +130,7 @@ class VectorClock(object):
         """
         Merge another clock into this one.
         """
-        if otherclock is VectorClock:
+        if isinstance(otherclock, VectorClock):
             otherclock = otherclock.getClocks()
         for key in otherclock:
             if key in self._clocks:
@@ -151,6 +151,8 @@ class VectorClock(object):
         """
         Return if this clock logically came before another.
         """
+        if isinstance(otherclock, VectorClock):
+            otherclock = otherclock.getClocks()
         oneStrictlySmall = False
         for key in otherclock:
             if self._clocks[key] > otherclock[key]:
@@ -163,6 +165,8 @@ class VectorClock(object):
         """
         Return if this clock logically came after another.
         """
+        if isinstance(otherclock, VectorClock):
+            otherclock = otherclock.getClocks()
         oneStrictlyLarger = False
         for key in otherclock:
             if self._clocks[key] < otherclock[key]:
