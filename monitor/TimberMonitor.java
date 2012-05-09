@@ -8,6 +8,7 @@ import java.awt.Paint;
 import java.awt.Stroke;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -38,8 +39,8 @@ public class TimberMonitor {
     /**
      * Window size.
      */
-    public static final int Width = 600;
-    public static final int Height = 400;
+    public static final int Width = 1000;
+    public static final int Height = 800;
     public static final int LayoutUpdateDelayMillis = 500;
     
     /**
@@ -47,6 +48,8 @@ public class TimberMonitor {
      */
     private ConcurrentHashMap<String, Vertex> vertices = 
         new ConcurrentHashMap<String, Vertex>();
+
+    private HashSet<String> existingEdges = new HashSet<String>();
     
     /**
      * Edges don't persist, so they live in a queue.
@@ -103,13 +106,16 @@ public class TimberMonitor {
             //Add a message
             }else if(arr[0].equals("Msg")){
                 if(arr.length == 4){
+                    String key = arr[1]+arr[2];
+                    if (!existingEdges.contains(key)){
+                        Edge toAdd = new Edge(
+                            vertices.get(arr[1]), 
+                            vertices.get(arr[2]), 
+                            arr[3]);
 
-                    Edge toAdd = new Edge(
-                        vertices.get(arr[1]), 
-                        vertices.get(arr[2]), 
-                        arr[3]);
-
-                    edgeQueue.add(toAdd);
+                        edgeQueue.add(toAdd);
+                        existingEdges.add(key);
+                    }
 
                 }else if(arr.length == 5){
 
@@ -226,6 +232,7 @@ public class TimberMonitor {
                 toAdd.getA().getName(), 
                 toAdd.getB().getName());
         }
+        existingEdges.clear();
         return graph;
     }
     

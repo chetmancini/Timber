@@ -17,6 +17,7 @@
 from __future__ import division
 import time
 import copy
+import random
 
 # External library imports
 import psutil
@@ -436,9 +437,9 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         ret['sum'] = {}
         ret['sum']['name'] = super(
             MinMaxAverageSumAggregator, self).getAverageAggregator().getName()
-        ret['sum']['value'] = len(connections.universe) \
-            * super(
-                MinMaxAverageSumAggregator, self).getAverageAggregator().getValue()
+        ret['sum']['value'] = len(connections.universe) * super(
+            MinMaxAverageSumAggregator, 
+            self).getAverageAggregator().getValue()
 
 
 class UpdateAggregator(NamedAggregator):
@@ -506,22 +507,22 @@ These are stats we would like to be accessible in the system
 def stats_init():
     global STATISTICS
 
-    DISK_AVAILABLE = MinMaxAggregator(
+    DISK_AVAILABLE = MinMaxAverageSumAggregator(
         'diskavailable', stats.disk_free)
 
-    NETWORK_LOAD = MinMaxAggregator(
+    NETWORK_LOAD = MinMaxAverageAggregator(
         'networkload', stats.network_load_single_stat)
 
-    DISK_LOAD = MinMaxAggregator(
+    DISK_LOAD = MinMaxAverageAggregator(
         'diskload', stats.disk_load_single_stat)
 
-    CPU_LOAD = MinMaxAggregator(
+    CPU_LOAD = MinMaxAverageAggregator(
         'cpuload', stats.cpu_utilization)
 
-    CPU_COUNT = MinMaxAggregator(
+    CPU_COUNT = MinMaxAverageSumAggregator(
         'cpucount', stats.cpu_count)
 
-    PMEM_AVAILABLE = MinMaxAggregator(
+    PMEM_AVAILABLE = MinMaxAverageSumAggregator(
         'pmemavailable', stats.physical_mem_free)
 
     NODE_COUNT = UpdateAggregator(

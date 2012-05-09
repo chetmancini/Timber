@@ -297,7 +297,7 @@ class GossipClientFactory(ReconnectingClientFactory):
         gossipMessages.append(vcMessage)
 
         # Put in each aggreggation. Tae out for now.
-        """
+
         for aggName in aggregation.STATISTICS:
             agg = aggregation.STATISTICS[aggName]
             aggMessage = message.AggregateMessage.createAggregateMessage(agg)
@@ -308,7 +308,7 @@ class GossipClientFactory(ReconnectingClientFactory):
         aggMessage = message.AggregateMessage.createAggregateMessage(agg)
         aggMessage.setRecipients(recipients)
         gossipMessages.append(aggMessage)
-
+        """
         # Get a network message
         gossipmsg = gossipPrepare()
         while gossipmsg:

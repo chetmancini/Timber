@@ -4,9 +4,7 @@ TODO
 ## Sister Applications
 
 * Weight tester / Timber polling 					Needs work. Show size of vertex.
-x Storage Layer (make sure no blocking) 			DONE?
 X Polling app 										Done
 
 Edge Weights
 Vertext Weights
-Logging

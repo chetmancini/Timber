@@ -158,7 +158,6 @@ class GenericMessage(object):
 
         if len(self.getRecipients()) == 1 and transport:
             node = connections.lookupNode(self.getRecipients()[0])
-            #hissclient = connections.HissTCPClientConnection(transport)
             hissclient = connections.HissConnection(node, transport)
             hissclient.dispatchMessage(self)
 
@@ -173,8 +172,8 @@ class GenericMessage(object):
             if uid in connections.universe:
                 node = connections.lookupNode(uid)
                 if not node.hasTCPConnection():
-                    raise ConnectionError(
-                        "No connection to " + node.getShortUid())
+                    debug("No connection to " + node.getShortUid(), 
+                        error=True)
                 else:
                     # Ok, stop messing around and send the message!
                     try:
@@ -476,7 +475,7 @@ class UniverseMessage(GossipNetworkStatusMessage):
         # If newer, add keys > None
         # Send info messages
         # Put in newer vector clock.
-        super.respond()
+        super(UniverseMessage, self).respond()
 
     @staticmethod
     def isUniverseMessae(msg):
@@ -508,7 +507,7 @@ class DeadNodeMessage(GossipNetworkStatusMessage):
             uid = self.getPayload()
             if uid in connections.universe:
                 connections.removeNode(uid)
-                super.respond()
+                super(DeadNodeMessage, self).respond()
                 debug("Dead#"+uid, monitor=True)
             else:
                 pass #don't gossip if we've already gossipped this.
@@ -543,8 +542,9 @@ class NewNodeMessage(GossipNetworkStatusMessage):
         try:
             (uidObject, ip) = self.getPayload()
             if uidObject.hex not in connections.universe: 
-                connections.createNode(uidObject, ip, connections.DEFAULT_SEND_PORT)
-                super.respond()
+                connections.createNode(
+                    uidObject, ip, connections.DEFAULT_SEND_PORT)
+                super(NewNodeMessage, self).respond()
             else:
                 pass # don't need to gossip if we've already gossipped this.
             debug("Successfully responded to new node message", success=True)

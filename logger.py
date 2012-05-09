@@ -60,14 +60,12 @@ def queueOutput():
     """
     while True:
         try:
-            debug("Waiting", info=True)
             msg = message_queue.queue.get(True, 5)
             if msg:
                 debug("Received Message. Logging...",success=True)
                 logMessage(msg)
             else:
                 time.sleep(3)
-                debug("Did not receive message. Sleeping",info=True)
         except:
             pass
 
