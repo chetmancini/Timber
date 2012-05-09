@@ -228,7 +228,7 @@ def network_connections():
     """
     return psutil.get_connections(kind='inet')
 
-def network_conneciton_count():
+def network_connection_count():
     """
     Return the number of open network connections
     """
@@ -259,6 +259,10 @@ def network_load_single_stat():
     Give back a single number to represent network load.
     """
     receivedPackets,sentPackets,receivedBytes,sentBytes = network_load()
+
+    debug("Load#"+me.getUid()+"#"+str(receivedPackets+sentPackets), 
+        monitor=True)
+    
     return receivedBytes + sentBytes
 
 

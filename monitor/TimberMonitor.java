@@ -199,8 +199,6 @@ public class TimberMonitor {
                     10.0f, 
                     dash, 
                     0.0f);
-            } else if (s.startsWith("ur")) {
-                bs = new BasicStroke(9.0f);
             } else {
                 bs = new BasicStroke(1.0f);
             }
