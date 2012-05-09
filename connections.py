@@ -299,13 +299,16 @@ def clientConnectionLost((host, port)):
     Called when a connection is lost. Not sure how to use this yet.
     """
     debug("connections.py: Connection has been lost?", info=True)
-
     """
     Remove the connection from the node.
     """
+    todelete = None
     for uid in universe:
         if universe[uid].getPort() == port and universe[uid].getIp() == host:
-            deadNode(uid)
+            todelete = uid
+            break
+    if todelete:
+        deadNode(todelete)
 
 def assignTransport(uid, transport):
     """
@@ -322,16 +325,21 @@ def informAlive():
     """
     Inform my peers I exist (for new nodes to system)
     """
-    alivemessage = message.NewNodeMessage((me.getMe().getUidAsObject(), me.getMe().getPort()))
+    alivemessage = message.NewNodeMessage(
+        (me.getMe().getUidAsObject(), me.getMe().getPort()))
     alivemessage.send()
     debug("Informing friends I am alive", info=True)
 
 def deadNodeByConnector(connector):
     dest = connector.getDestination()
+    todelete = None
     for uid in universe:
         if universe[uid].getIp() == dest.host \
             and universe[uid].getPort() == dest.port:
-            deadNode(uid)
+            todelete = uid
+            break
+    if todelete:
+        deadNode(todelete)
 
 def deadNode(uid):
     """
@@ -346,6 +354,7 @@ def deadNode(uid):
         deadMessage.send()
     finally:
         knownDead.add(uid)
+        debug("Dead#"+uid, monitor=True)
     debug("removing dead node uid:" + uid, info=True)
 
 def foundClientAsServer(transport):
@@ -404,8 +413,8 @@ def globalReset():
     """
     debug("GLOBAL RESET. AAAGGG!", info=True)
     me = None
-    for uid in universe:
-        deadNode(uid)
+    while(len(universe)) > 0:
+        deadNode(universe.keys()[0])
     universe = {}
     simpledb.deleteAll("members")
     init()
