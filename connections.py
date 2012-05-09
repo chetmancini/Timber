@@ -202,7 +202,9 @@ def maintainMembers():
     the universe of known nodes.
     """
     global universe
-    debug("Running maintain members.", info=True)
+    
+    debug("Running maintain members.", 
+        info=True, threshold=1)
 
     possibledead = set(universe.keys())
 

@@ -73,7 +73,8 @@ class GossipServerProtocol(Protocol):
         """
         Callback called once a connection is made with a client.
         """
-        debug("Server protocol connection made!", success=True)
+        debug("Server protocol connection made!", 
+            success=True, threshold=1)
         self.factory.clientConnectionMade(self)
 
         # Send a response
@@ -113,7 +114,8 @@ class GossipClientProtocol(Protocol):
         """
         Callback when a connection is made.
         """
-        debug("Client Protocol connection made", success=True)
+        debug("Client Protocol connection made", 
+            success=True, threshold=1)
         connections.clientConnectionMade(self.transport)
 
         ### Send a message to respond.
@@ -125,7 +127,8 @@ class GossipClientProtocol(Protocol):
         """
         Callback when a connection is lost.
         """
-        debug("Client Protocol connection lost", error=True)
+        debug("Client Protocol connection lost", 
+            error=True, threshold=2)
         connections.clientConnectionLost(self.transport.addr)
 
 
@@ -133,7 +136,8 @@ class GossipClientProtocol(Protocol):
         """
         Data received? this seems a little odd.
         """
-        debug("DATA RECEIVED VIA CLIENT", strange=True)
+        debug("Data received via client", 
+            strange=True, threshold=1)
         if len(data) == 32:
             connections.assignTransport(data, self.transport)
         else:
@@ -167,7 +171,8 @@ class GossipServerFactory(ServerFactory):
         self.aggregationLoop = task.LoopingCall(aggregation.refreshAll)
         self.aggregationLoop.start(config.STATS_REFRESH_INTERVAL, False)
 
-        debug("Gossip Server Factory created!", success=True)
+        debug("Gossip Server Factory created!", 
+            success=True, threshold=1)
 
 
     def clientConnectionMade(self, client):
@@ -175,7 +180,7 @@ class GossipServerFactory(ServerFactory):
         When a node is found
         """
         debug("Server: Receiving client " + str(client.transport.getPeer()), 
-            success=True)
+            success=True, threshold=1)
 
         connections.foundClientAsServer(client.transport)
 
@@ -184,7 +189,7 @@ class GossipServerFactory(ServerFactory):
         When a node is lost.
         """
         debug("Server: Lost client " + str(client.transport.getPeer()) + \
-            " for reason " + str(reason), error=True)
+            " for reason " + str(reason), error=True, threshold=2)
 
         connections.lostClientAsServer(client.transport)
 
@@ -205,7 +210,8 @@ class GossipServerFactory(ServerFactory):
         Quit the members refresh operation.
         """
         self.membersLoop.stop()
-        debug("Members Refresh Operation Ceased. Universe Stable.", info=True)
+        debug("Members Refresh Operation Ceased. Universe Stable.", 
+            info=True, threshold=2)
 
 
 class GossipClientFactory(ReconnectingClientFactory):
@@ -221,7 +227,8 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Constructor.
         """
-        debug("Client Factory Init", info=True)
+        debug("Client Factory Init", 
+            info=True, threshold=1)
         # Run gossip on a timer.
         self.gossipLoop = task.LoopingCall(self.gossip)
         self.gossipLoop.start(config.GOSSIP_WAIT_SECONDS, False)
@@ -233,7 +240,8 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Callback when the client connection fails.
         """
-        debug("Client Connection failed", info=True)
+        debug("Client Connection failed", 
+            info=True, threshold=3)
         if self.errback:
             self.errback(reason)
         connections.deadNodeByConnector(connector)
@@ -242,7 +250,8 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Callback for when the client connection is lost.
         """
-        debug("Client Connection lost!", info=True)
+        debug("Client Connection lost!", 
+            info=True, threshold=1)
         if self.errback:
             self.errback(reason)
 
@@ -250,20 +259,23 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Called when a connection is starting
         """
-        debug("Client Factory started connecting...", info=True)
+        debug("Client Factory started connecting...", 
+            info=True, threshold=1)
 
     def startFactory(self):
         """
         Called when the factory is started
         """
-        debug("Client Factory Started...", info=True)
+        debug("Client Factory Started...", 
+            info=True, threshold=1)
         pass #good for connectiong, opening fiels, etc..
 
     def stopFactory(self):
         """
         Called when the factory is stopped.
         """
-        debug("Client Factory Stopped...", info=True)
+        debug("Client Factory Stopped...", 
+            info=True, threshold=1)
         pass #good for disconnectiong databases, closing files.
 
 
@@ -285,7 +297,8 @@ class GossipClientFactory(ReconnectingClientFactory):
             debug("Gossipping with: [ " + " ][ ".join(shortids) + " ]", 
                 info=True)
         else:
-            debug("No neighbors to gossip with this interval.", error=True)
+            debug("No neighbors to gossip with this interval.", 
+                error=True, threshold=1)
             return
 
         # Put all messages in a list.

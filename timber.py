@@ -68,6 +68,17 @@ __warranty__ = "None"
 def catchError(err):
     return "Internal error in server"
 
+def getHead():
+    return """
+    <div style='font-family:sans-serif;'>
+    <h1>Timber API Access</h1>
+    """
+
+def getFoot():
+    return """
+    </div>
+    """
+
 ### Classes ##################################################################
 
 class TimberRootResource(resource.Resource):
@@ -81,7 +92,7 @@ class TimberRootResource(resource.Resource):
         localhost:8000/
         """
         debug("GET request received at Root on " + \
-            me.getMe().getIp(), info=True)
+            me.getMe().getIp(), info=True, threshold=3)
         return 'Welcome to the REST API'
 
     def getChild(self, name, request):
@@ -190,16 +201,18 @@ class TimberStatsResource(resource.Resource):
             elif name in aggregation.STATISTICS:
                 aggDict = aggregation.getAggregation(name)
                 debug("Sent Stat response for " + name, 
-                    success=True)
+                    success=True, threshold=2)
                 return json.dumps(aggDict)
             else:
                 return "Not a valid statistic name. Try: '" + \
                     + "' | '".join(aggregation.STATISTICS.keys()) + "'"
         else:
-            ret = "<div style='font-family:sans-serif;'><p>Set a 'name' GET parameter to:</p><ul>"
+            ret = getHead()
+            ret += "<p>Set a 'name' GET parameter to:</p><ul>"
             for key in aggregation.STATISTICS:
                 ret += "<li><a href='?name="+key+"'>"+key+"</a></li>"
-            ret += "</ul></div>"
+            ret += "</ul>"
+            ret += getFoot()
             return ret
 
     def render_POST(self, request):
@@ -207,7 +220,13 @@ class TimberStatsResource(resource.Resource):
         Post data to statistics. Not currently supported.
         """
         debug("Invalid stats POST access", info=True)
-        return "Sorry, POST access not provided"
+        ret = getHead()
+        ret += "<p>POST access not provided.</p>"
+        ret += "<p>Set a 'name' GET parameter to:</p><ul>"
+        for key in aggregation.STATISTICS:
+            ret += "<li><a href='?name="+key+"'>"+key+"</a></li>"
+        ret += "</ul>" + getFoot()
+        return ret
 
 
 class PageNotFoundError(resource.Resource):

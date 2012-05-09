@@ -189,8 +189,9 @@ class GenericMessage(object):
             else:
                 raise GeneralError(
                     "recipient " + uid + " not found.")
-        debug("(" + self.getCode() + ") message sent to [ " \
-            + " ][ ".join(recs) + " ]", success=True)
+        if self.getCode() != 'AG':
+            debug("(" + self.getCode() + ") message sent to [ " \
+                + " ][ ".join(recs) + " ]", success=True)
 
     def getCode(self):
         """
