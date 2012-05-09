@@ -418,6 +418,8 @@ class GossipNetworkStatusMessage(NetworkStatusMessage):
         """
         Constructor
         """
+        if not recipients:
+            recipients = connections.getNeighbors()
         super(GossipNetworkStatusMessage, self).__init__(
             updates, sender, recipients)
 

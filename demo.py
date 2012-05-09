@@ -290,8 +290,8 @@ def killProcess():
     Simulate destroying a process.
     """ 
     procDict = processes.pop()
-    procDict['stdout'].stop()
-    procDict['stderr'].stop()
+    procDict['stdout'].join(1)
+    procDict['stderr'].join(1)
     procDict['proc'].kill()
 
 def newProcess():

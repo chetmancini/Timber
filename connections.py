@@ -187,7 +187,7 @@ def init():
     that me.py doesn't need to import anything.
     """
     global neighborStrategy
-    
+
     me.init(nodes.CurrentNode())
     debug("Init called. Node is " + me.getUid(), info=True)
     debug("#".join(["New", me.getMe().getShortUid(), me.getUid()]), 
@@ -303,6 +303,9 @@ def clientConnectionLost((host, port)):
     """
     Remove the connection from the node.
     """
+    for uid in universe:
+        if universe[uid].getPort() == port and universe[uid].getIp() == host:
+            deadNode(uid)
 
 def assignTransport(uid, transport):
     """
@@ -323,6 +326,12 @@ def informAlive():
     alivemessage.send()
     debug("Informing friends I am alive", info=True)
 
+def deadNodeByConnector(connector):
+    dest = connector.getDestination()
+    for uid in universe:
+        if universe[uid].getIp() == dest.host \
+            and universe[uid].getPort() == dest.port:
+            deadNode(uid)
 
 def deadNode(uid):
     """
@@ -332,7 +341,9 @@ def deadNode(uid):
     try:
         lookupNode(uid).destroyTCPConnection()
         neighborStrategy.removeNeighbor(uid)
-        universe.remove(uid)
+        del universe[uid]
+        deadMessage = message.DeadNodeMessage(uid)
+        deadMessage.send()
     finally:
         knownDead.add(uid)
     debug("removing dead node uid:" + uid, info=True)

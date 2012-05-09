@@ -121,7 +121,7 @@ class GossipClientProtocol(Protocol):
         #response.send(self.transport)
         self.transport.write(me.getUid())
 
-    def connectionLost(self):
+    def connectionLost(self, reason):
         """
         Callback when a connection is lost.
         """
@@ -233,9 +233,10 @@ class GossipClientFactory(ReconnectingClientFactory):
         """
         Callback when the client connection fails.
         """
-        debug("Client Connection failed for reason: " + reason, info=True)
+        debug("Client Connection failed", info=True)
         if self.errback:
             self.errback(reason)
+        connections.deadNodeByConnector(connector)
 
     def clientConnectionLost(self, connector, unused_reason):
         """

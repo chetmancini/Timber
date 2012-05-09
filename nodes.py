@@ -252,11 +252,14 @@ class ExternalNode(BaseNode):
         """
         Destroy the TCP connection 
         """
-        debug("Destroying connection to [ " + self.getShortUid() + " ]", 
-            info=True)
-        if self.hasTCPConnection():
-            self.getTCPConnection().loseConnection("destroying it.")
-        self._tcpConnection = None
+        try:
+            debug("Destroying connection to [ " + self.getShortUid() + " ]", 
+                info=True)
+            if self.hasTCPConnection():
+                self.getTCPConnection().loseConnection()
+            self._tcpConnection = None
+        except:
+            debug("error destroying tcp connection", error=True)
 
     @staticmethod
     def fromBase(basenode):
