@@ -415,12 +415,14 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         Constructor
         """
         super(MinMaxAverageSumAggregator, self).__init__(name, statistic)
+        self._nodecount = len(connections.universe)
 
     def refresh(self):
         """
         Refresh from the local machine/sensor
         """
         super(MinMaxAverageSumAggregator, self).refresh()
+        self._nodecount = len(connections.universe)
 
     def reduce(self, other):
         """
@@ -435,11 +437,9 @@ class MinMaxAverageSumAggregator(MinMaxAverageAggregator):
         """
         ret = super(MinMaxAverageSumAggregator, self).getStatistic()
         ret['sum'] = {}
-        ret['sum']['name'] = super(
-            MinMaxAverageSumAggregator, self).getAverageAggregator().getName()
-        ret['sum']['value'] = len(connections.universe) * super(
-            MinMaxAverageSumAggregator, 
-            self).getAverageAggregator().getValue()
+        ret['sum']['name'] = ret['avg']['name']
+        ret['sum']['value'] = ret['avg']['value'] * self._nodecount
+        return ret
 
 
 class UpdateAggregator(NamedAggregator):
@@ -507,7 +507,7 @@ These are stats we would like to be accessible in the system
 def stats_init():
     global STATISTICS
 
-    DISK_AVAILABLE = MinMaxAverageAggregator(
+    DISK_AVAILABLE = MinMaxAverageSumAggregator(
         'diskavailable', stats.disk_free)
 
     NETWORK_LOAD = MinMaxAverageAggregator(
@@ -519,10 +519,10 @@ def stats_init():
     CPU_LOAD = MinMaxAverageAggregator(
         'cpuload', stats.cpu_utilization)
 
-    CPU_COUNT = MinMaxAverageAggregator(
+    CPU_COUNT = MinMaxAverageSumAggregator(
         'cpucount', stats.cpu_count)
 
-    PMEM_AVAILABLE = MinMaxAverageAggregator(
+    PMEM_AVAILABLE = MinMaxAverageSumAggregator(
         'pmemavailable', stats.physical_mem_free)
 
     NODE_COUNT = UpdateAggregator(
