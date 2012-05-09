@@ -177,6 +177,28 @@ class TimberLoggingResource(resource.Resource):
             return "Error"
 
 
+class TimberQueryResource(resource.Resource):
+    """
+    Resource for querying logged messages.
+    """
+    def render_GET(self, request):
+        """
+        Get logged messages
+        """
+        ret = getHead()
+        ret += "<p>GET not currently implemented</p>" 
+        ret += getFoot()
+        return ret
+
+    def render_POST(self, request):
+        """
+        Modifify logged messages
+        """
+        ret = getHead()
+        ret += "<p>POST not currently implemented</p>" 
+        ret += getFoot()
+        return ret
+
 
 class TimberStatsResource(resource.Resource):
     """
@@ -252,6 +274,7 @@ class PageNotFoundError(resource.Resource):
 
 APIS = {
     'logger': TimberLoggingResource(),
+    'query': TimberQueryResource(),
     'stats': TimberStatsResource(),
     }
 
@@ -263,6 +286,7 @@ def timberRun():
     """
     root = TimberRootResource()
     root.putChild("logger", TimberLoggingResource())
+    root.putChild("query", TimberQueryResource())
     root.putChild("stats", TimberStatsResource())
 
     timber_factory = server.Site(root)
