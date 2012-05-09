@@ -196,8 +196,11 @@ class TimberStatsResource(resource.Resource):
                 return "Not a valid statistic name. Try: '" + \
                     + "' | '".join(aggregation.STATISTICS.keys()) + "'"
         else:
-            return "Set a 'stat' GET parameter to: '" \
-            + "' | '".join(aggregation.STATISTICS.keys()) + "'"
+            ret = "Set a 'name' GET parameter to: <ul>"
+            for key in aggregation.STATISTICS:
+                ret += "<li><a href='?name="+key+"'>"+key+"</a></li>"
+            ret += "</ul>"
+            return ret
 
     def render_POST(self, request):
         """

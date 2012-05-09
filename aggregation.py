@@ -354,7 +354,7 @@ class MinMaxAggregator(object):
     def getStatistic(self):
         ret = {}
         ret['min'] = self.getMinAggregator().getStatistic()
-        ret['min'] = self.getMaxAggregator().getStatistic()
+        ret['max'] = self.getMaxAggregator().getStatistic()
         return ret
 
     def localValue(self):
@@ -507,7 +507,7 @@ These are stats we would like to be accessible in the system
 def stats_init():
     global STATISTICS
 
-    DISK_AVAILABLE = MinMaxAverageSumAggregator(
+    DISK_AVAILABLE = MinMaxAverageAggregator(
         'diskavailable', stats.disk_free)
 
     NETWORK_LOAD = MinMaxAverageAggregator(
@@ -519,10 +519,10 @@ def stats_init():
     CPU_LOAD = MinMaxAverageAggregator(
         'cpuload', stats.cpu_utilization)
 
-    CPU_COUNT = MinMaxAverageSumAggregator(
+    CPU_COUNT = MinMaxAverageAggregator(
         'cpucount', stats.cpu_count)
 
-    PMEM_AVAILABLE = MinMaxAverageSumAggregator(
+    PMEM_AVAILABLE = MinMaxAverageAggregator(
         'pmemavailable', stats.physical_mem_free)
 
     NODE_COUNT = UpdateAggregator(
